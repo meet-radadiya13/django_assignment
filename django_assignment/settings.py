@@ -26,6 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 INSTALLED_APPS = [
     'phone_field',
+    'related_admin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
