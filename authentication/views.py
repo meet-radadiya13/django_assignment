@@ -15,20 +15,6 @@ def handler404(request, *args, **argv):
     return response
 
 
-@login_required
-def home(request):
-    return render(request, "root/home.html", {})
-
-
-def render_login(request):
-    return render(request, "user/login.html", {})
-
-
-@login_required
-def render_profile(request):
-    return render(request, "user/profile.html", {})
-
-
 @require_POST
 def save_user(request):
     name = request.POST.get("name")

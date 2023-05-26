@@ -12,7 +12,9 @@ from .managers import CustomUserManager
 
 # Create your models here.
 class User(AbstractBaseUser, PermissionsMixin):
-    username = models.CharField(_("Username"), default="user", max_length=20, unique=True)
+    username = models.CharField(
+        _("Username"), default="user", max_length=20, unique=True
+    )
     firstname = models.CharField(max_length=20, null=True, blank=True)
     lastname = models.CharField(max_length=20, null=True, blank=True)
     about = models.TextField(null=True, blank=True)

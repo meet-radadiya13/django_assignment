@@ -111,7 +111,9 @@ class AuditHistory(CommonModel):
         Project, null=True, blank=True, on_delete=models.DO_NOTHING
     )
     action = models.TextField(null=True, blank=True)
-    action_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.DO_NOTHING)
+    action_by = models.ForeignKey(
+        User, null=True, blank=True, on_delete=models.DO_NOTHING
+    )
 
     # created_by = models.ForeignKey(
     #     User,
