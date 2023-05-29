@@ -97,7 +97,7 @@ DATETIME_FORMAT = '%d-%m-%Y %H:%M:%S'
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'Asia/Kolkata'
+TIME_ZONE = 'UTC'
 
 USE_I18N = True
 
