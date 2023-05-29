@@ -1,5 +1,6 @@
 import datetime
 
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.shortcuts import render, redirect
@@ -69,7 +70,11 @@ def edit_projects(request, project_id):
     projects = Project.objects.get(id=project_id)
     users = User.objects.exclude(username=request.user.username)
     context = {'projects': projects, 'users': users}
-    return render(request, 'project/edit_projects.html', context)
+    if projects.created_by == request.user:
+        return render(request, 'project/edit_projects.html', context)
+    else:
+        messages.error(request, "You don't have permission to edit this project.")
+        return redirect("view_projects")
 
 
 @login_required
@@ -95,6 +100,7 @@ def update_projects(request):
     project.dead_line = d
 
     project.description = description
+    project.updated_by = request.user
 
     if completed:
         project.is_completed = True
@@ -104,3 +110,12 @@ def update_projects(request):
     project.save()
 
     return redirect("view_projects")
+
+
+@login_required
+@require_POST
+def search_projects(request):
+    name = request.POST.get('search')
+    projects = Project.objects.filter(name__icontains=name)
+    context = {'my_projects': projects}
+    return render(request, 'project/project.html', context)

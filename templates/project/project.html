@@ -10,15 +10,19 @@
 {% endblock styles %}
 
 {% block body %}
+
     <main class="main">
         <div class="responsive-wrapper">
             <div class="main-header">
                 <h1 class="bold">Projects</h1>
                 <div class="search">
-                    <input type="text" placeholder="Search"/>
+                    <form action="{% url 'search_projects' %}" method="post" style="width: inherit;">
+                        {% csrf_token %}
+                    <input type="text" placeholder="Search" name="search"/>
                     <button type="submit">
                         <i class="ph-magnifying-glass-bold"></i>
                     </button>
+                    </form>
                 </div>
             </div>
             <div class="content-header">
@@ -81,4 +85,11 @@
             </div>
         {% endfor %}
     </div>
+    {% if messages %}
+        <script>
+            {% for message in messages %}
+                alert("{{ message }}");
+            {% endfor %}
+        </script>
+    {% endif %}
 {% endblock body %}

@@ -14,7 +14,7 @@
     <div class="row">
         <div class="col-md-12">
             <form action="{% url 'insert_projects' %}" method="post">
-            {% csrf_token %}
+                {% csrf_token %}
                 <fieldset>
                     <legend><span class="number">1</span> Your Project Info</legend>
 
@@ -38,7 +38,7 @@
                     <input type="checkbox" id="backend" value="backend" name="tags"><label
                         class="light" for="backend">Back End</label><br>
                     <input type="checkbox" id="frontend" value="frontend" name="tags"><label class="light"
-                                                                                                           for="frontend">Front
+                                                                                             for="frontend">Front
                     End</label><br>
                     <input type="checkbox" id="designing" value="designing" name="tags"><label
                         class="light" for="designing">Designing</label>

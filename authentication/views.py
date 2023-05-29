@@ -25,6 +25,7 @@ def save_user(request):
         User = get_user_model()
         user = User.objects.create_user(email=email, password=password1, username=name)
         user.save()
+        messages.success(request, "Registered successfully! Login to continue.")
     else:
         messages.error(request, "Passwords do not match")
     return render(request, "user/login.html", {})
