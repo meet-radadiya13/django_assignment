@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.views.decorators.http import require_POST
+from django.contrib.auth import update_session_auth_hash
 
 from authentication.models import User
 
@@ -96,6 +97,8 @@ def edit_password(request):
         if new_password == new_password_again:
             current_user.set_password(new_password)
             current_user.save()
+            login(request, current_user)
+            messages.success(request, "Passwords changed successfully.")
         else:
             messages.error(request, "Passwords do not match")
     else:

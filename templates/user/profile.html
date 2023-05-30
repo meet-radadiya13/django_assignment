@@ -98,7 +98,7 @@
                                                                     <label>Email</label>
                                                                     <input class="form-control" type="text"
                                                                            name="email"
-                                                                           value="{{ user.email }}">
+                                                                           value="{{ user.email }}" disabled>
                                                                 </div>
                                                             </div>
                                                             <div class="col">
@@ -131,6 +131,8 @@
                                             </div>
                                         </div>
                                     </form>
+
+                                    <!----Password From ---->
                                     <form method="post" action="{% url 'edit_password' %}">
                                         {% csrf_token %}
                                         <input type="hidden" name="user_id_reset" value="{{ user.id }}">
