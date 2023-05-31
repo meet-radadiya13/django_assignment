@@ -4,7 +4,6 @@ body {
     line-height: 1.5;
     min-height: 100vh;
     font-family: "Be Vietnam Pro", sans-serif;
-
 }
 
 .card-grid {
@@ -124,4 +123,11 @@ div.dis-box {
 
 .modal-form-row {
     margin-bottom: 0px;
+}
+
+.page-link{
+    color: #404089;
+}
+.page-link:hover{
+    color: #434ce8;
 }

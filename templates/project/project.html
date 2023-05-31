@@ -10,21 +10,20 @@
 {% endblock styles %}
 
 {% block body %}
-
     <main class="main">
         <div class="responsive-wrapper">
             <div class="main-header">
                 <h1 class="bold">Projects</h1>
                 <div class="search">
-                    <form method="get" id="search-form" action="{% url 'search_projects' %}" style="width: inherit;"
-                          data-url="{% url 'search_projects' %}">
+                    <form method="get" id="search-form" action="#" style="width: inherit;">
                         {% csrf_token %}
-                        <input id="search-input" type="text" placeholder="Search" name="search"
-                               oninput="fetch_result()" value="{{ name }}" autofocus/>
+                        <input id="search-input" type="text" placeholder="Search" name="search" value="{{ name }}"/>
                         <button type="submit">
                             <i class="ph-magnifying-glass-bold"></i>
                         </button>
                     </form>
+                    <input type="hidden" id="search-url" data-url="{% url 'search_projects' %}">
+                    <input type="hidden" id="edit-url" data-url="{% url 'edit_projects' 1 %}">
                 </div>
             </div>
             <div class="content-header">
@@ -46,7 +45,7 @@
         </div>
     </main>
     <div id="card" class="card-grid">
-        {% for project in my_projects %}
+        {% for project in page_obj %}
             <div class="card">
                 <header class="card-header">
                     <h3>{{ project.name }}<a href="{% url 'edit_projects' project.id %}"><i
@@ -93,5 +92,27 @@
             {% endfor %}
         </script>
     {% endif %}
+    <nav aria-label="Page navigation example" id="navbar">
+        <ul class="pagination justify-content-center">
+            <li class="page-item">
+                <a class="page-link" href="{% url 'view_projects' 1 %}" tabindex="-1">&laquo; First</a>
+            </li>
+            {% if has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="{% url 'view_projects' previous_page_no %}" tabindex="-1">&lt; Previous</a>
+                </li>
+            {% endif %}
+            <li class="page-item"><a class="page-link" href="#">{{ current_page }}</a></li>
+            {% if has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{% url 'view_projects' next_page_no %}">Next &gt;</a>
+                </li>
+            {% endif %}
+            <li class="page-item">
+                <a class="page-link" href="{% url 'view_projects' last_page %}" tabindex="-1">Last &raquo;</a>
+            </li>
+        </ul>
+    </nav>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
     <script type="text/javascript" src="{% static 'js/project.js' %}"></script>
 {% endblock body %}

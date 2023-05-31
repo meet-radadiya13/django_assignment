@@ -24,8 +24,8 @@
                     <label for="acronym">Project Acronym:</label>
                     <input type="text" id="acronym" name="project_acronym" placeholder="For ex. MDP">
 
-                    <label for="job">Project Assignee</label>
-                    <select id="job" class="js-example-basic-multiple selectfield" name="assignee" multiple="multiple">
+                    <label for="assignee">Project Assignee</label>
+                    <select id="assignee" class="js-example-basic-multiple" name="assignee" multiple="multiple">
                         {% for user in users %}
                             <option value="{{ user }}">{{ user.username }}</option>
                         {% endfor %}
