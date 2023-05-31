@@ -1,4 +1,5 @@
 import datetime
+import json
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -11,11 +12,11 @@ from django.views.decorators.http import require_POST
 
 from authentication.models import User
 from project.models import Project
-
+from project.encoder import LazyEncoder
 
 # Create your views here.
 @login_required
-def view_projects(request, page_no):
+def view_projects(request, page_no=1):
     current_user = request.user
     my_projects = Project.objects.filter(Q(created_by=current_user) | Q(assign=current_user))
     context = {}
@@ -123,5 +124,5 @@ def search_projects(request):
     query = request.GET.get('query')
     current_user = request.user
     projects = Project.objects.filter(Q(name__icontains=query) & (Q(created_by=current_user) | Q(assign=current_user)))
-    data = serializers.serialize('json', projects)
+    data = serializers.serialize('json', projects, cls=LazyEncoder)
     return JsonResponse(data, safe=False)
