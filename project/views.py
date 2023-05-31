@@ -1,5 +1,4 @@
 import datetime
-import json
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -11,8 +10,9 @@ from django.shortcuts import render, redirect
 from django.views.decorators.http import require_POST
 
 from authentication.models import User
-from project.models import Project
 from project.encoder import LazyEncoder
+from project.models import Project
+
 
 # Create your views here.
 @login_required
@@ -58,7 +58,7 @@ def insert_projects(request):
     project = Project()
     users = []
     for user in project_assignee:
-        users.append(User.objects.filter(email=user))
+        users.append(User.objects.filter(username=user))
     project.name = project_name
     project.acronym = project_acronym
     year, month, date = dead_line.split('-')
@@ -76,7 +76,7 @@ def insert_projects(request):
     for user_obj in users:
         project.assign.add(user_obj[0])
     project.save()
-    return redirect("view_projects")
+    return redirect("view_projects", page_no=1)
 
 
 @login_required
@@ -88,7 +88,7 @@ def edit_projects(request, project_id):
         return render(request, 'project/edit_projects.html', context)
     else:
         messages.error(request, "You do not have permission to edit this project.")
-        return redirect("view_projects")
+        return redirect("view_projects", page_no=1)
 
 
 @login_required
@@ -103,7 +103,7 @@ def update_projects(request):
     project.assign.clear()
     users = []
     for user in assignee:
-        users.append(User.objects.filter(email=user))
+        users.append(User.objects.filter(username=user))
     for user_obj in users:
         project.assign.add(user_obj[0])
     year, month, date = dead_line.split('-')
@@ -116,7 +116,7 @@ def update_projects(request):
     else:
         project.is_completed = False
     project.save()
-    return redirect("view_projects")
+    return redirect("view_projects", page_no=1)
 
 
 @login_required
