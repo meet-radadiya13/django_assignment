@@ -1,0 +1,62 @@
+{% extends 'root/base.html' %}
+{% load static %}
+
+{% block title %}
+    Add Projects
+{% endblock title %}
+
+{% block styles %}
+    <link href="{% static 'css/add_project.css' %}" rel="stylesheet" type="text/css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+{% endblock styles %}
+
+{% block body %}
+    <div class="row">
+        <div class="col-md-12">
+            <form action="{% url 'insert_projects' %}" method="post">
+                {% csrf_token %}
+                <fieldset>
+                    <legend><span class="number">1</span> Your Project Info</legend>
+
+                    <label for="projectname">Project Name:</label>
+                    <input type="text" id="projectname" name="project_name" placeholder="For ex. MyDemoProject">
+
+                    <label for="acronym">Project Acronym:</label>
+                    <input type="text" id="acronym" name="project_acronym" placeholder="For ex. MDP">
+
+                    <label for="assignee">Project Assignee</label>
+                    <select id="assignee" class="js-example-basic-multiple" name="assignee" multiple="multiple">
+                        {% for user in users %}
+                            <option value="{{ user }}">{{ user.username }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <label for="date">Dead Line:</label>
+                    <input type="date" id="date" name="dead_line">
+
+                    <label>Tags:</label>
+                    <input type="checkbox" id="backend" value="backend" name="tags"><label
+                        class="light" for="backend">Back End</label><br>
+                    <input type="checkbox" id="frontend" value="frontend" name="tags"><label class="light"
+                                                                                             for="frontend">Front
+                    End</label><br>
+                    <input type="checkbox" id="designing" value="designing" name="tags"><label
+                        class="light" for="designing">Designing</label>
+
+                    <label for="description">Project Description:</label>
+                    <textarea id="description" name="project_desc"></textarea>
+
+                    <input type="checkbox" id="completed" value="completed" name="completed"><label
+                        class="light" for="completed">Project Completed</label><br>
+
+                </fieldset>
+
+                <button type="submit">Add Project</button>
+
+            </form>
+        </div>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+    <script type="text/javascript" src="{% static 'js/add_project.js' %}"></script>
+{% endblock body %}
