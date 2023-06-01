@@ -11,7 +11,7 @@ from django.views.decorators.http import require_POST
 
 from authentication.models import User
 from project.encoder import LazyEncoder
-from project.models import Project
+from project.models import Project, Task
 
 
 # Create your views here.
@@ -126,3 +126,57 @@ def search_projects(request):
     projects = Project.objects.filter(Q(name__icontains=query) & (Q(created_by=current_user) | Q(assign=current_user)))
     data = serializers.serialize('json', projects, cls=LazyEncoder)
     return JsonResponse(data, safe=False)
+
+#For Tasks.
+@login_required()
+def view_tasks(request):
+    current_user = request.user
+    my_tasks = Task.objects.filter(Q(created_by=current_user) | Q(assign=current_user))
+    context = {'my_tasks': my_tasks}
+    return render(request, 'task/task.html', context)
+
+
+@login_required
+def add_tasks(request):
+    users = User.objects.exclude(username=request.user)
+    projects = Project.objects.all()
+    context = {'users': users, 'projects': projects}
+    return render(request, 'task/add_task.html', context)
+
+
+@login_required
+@require_POST
+def insert_tasks(request):
+    task_name = request.POST.get('task_name')
+    task_acronym = request.POST.get('task_acronym')
+    task_assignee = request.POST.get('assignee')
+    task_description = request.POST.get('task_desc')
+    task_related_project = request.POST.get('related-project-name')
+    task_type = request.POST['task-type']
+    task_status = request.POST['task-status']
+    task_priority = request.POST['task-priority']
+    task = Task()
+
+    task.project = Project.objects.get(pk=task_related_project)
+    task.assign = User.objects.get(pk=task_assignee)
+    task.name = task_name
+    task.task_acronym = task_acronym
+    task.description = task_description
+    task.created_by = request.user
+    task.updated_by = request.user
+    task.task_priority = task_priority
+    task.task_status = task_status
+    task.task_type = task_type
+    task.save()
+
+    return redirect("view_tasks")
+
+@login_required
+def edit_tasks(request, task_id):
+        pass
+
+
+@login_required
+@require_POST
+def update_tasks(request):
+        pass

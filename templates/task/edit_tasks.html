@@ -1,0 +1,54 @@
+{% extends 'root/base.html' %}
+{% load static %}
+
+{% block title %}
+    Edit tasks
+{% endblock title %}
+
+{% block styles %}
+    <link href="{% static 'css/add_project.css' %}" rel="stylesheet" type="text/css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+{% endblock styles %}
+
+{% block body %}
+    <div class="row">
+        <div class="col-md-12">
+            <form action="{% url 'update_tasks' %}" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="task_id" value="{{ projects.id }}">
+                <fieldset>
+                    <legend><span class="number">1</span> Your Project Info</legend>
+
+                    <label for="projectname">Project Name:</label>
+                    <input type="text" id="projectname" name="project_name" value="{{ projects.name }}" disabled>
+
+                    <label for="acronym">Project Acronym:</label>
+                    <input type="text" id="acronym" name="project_acronym" value="{{ projects.acronym }}" disabled>
+
+                    <label for="job">Project Assignee</label>
+                    <select id="job" class="js-example-basic-multiple selectfield" name="assignee" multiple="multiple">
+                        {% for user in users %}
+                            <option value="{{ user }}" {% if user in projects.assign.all %} selected {% endif %}>{{ user.username }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <label for="date">Dead Line:</label>
+                    <input type="date" id="date" name="dead_line" value="{{ projects.dead_line|date:'Y-m-d' }}">
+
+                    <label for="description">Project Description:</label>
+                    <textarea id="description" name="project_desc">{{ projects.description }}</textarea>
+
+                    <input type="checkbox" id="completed" {% if projects.is_completed %} checked {% endif %} name="completed"><label
+                        class="light" for="completed">Mark as completed</label><br>
+
+                </fieldset>
+
+                <button type="submit">Update Project</button>
+
+            </form>
+        </div>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+    <script type="text/javascript" src="{% static 'js/add_project.js' %}"></script>
+{% endblock body %}
