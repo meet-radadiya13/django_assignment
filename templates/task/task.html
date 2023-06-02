@@ -2,15 +2,16 @@
 {% load static %}
 
 {% block title %}
-    Tasks
+Tasks
 {% endblock title %}
 
 {% block styles %}
-    <link href="{% static 'css/task.css' %}" rel="stylesheet" type="text/css">
+<link href="{% static 'css/task.css' %}" rel="stylesheet" type="text/css">
 <!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/css/bootstrap.css">-->
 <!--    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/dataTables.bootstrap4.min.css">-->
 
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+<!--<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">-->
 
 {% endblock styles %}
 
@@ -20,91 +21,141 @@
 <!--<br>-->
 <!--<br>-->
 <!--<br>-->
+
 <main class="main">
-        <div class="responsive-wrapper">
-            <div class="main-header">
-                <h1 class="bold">Task's Summary</h1>
+    <div class="responsive-wrapper">
+
+        <div class="content-header">
+
+            <div class="content-header-actions">
+                <a href="#" class="button">
+                    <i class="ph-faders-bold"></i>
+                    <span>Filters</span>
+                </a>
+
             </div>
-            <div class="content-header">
-                <div class="content-header-intro">
-                    <h2 class="bold">Intergrations and connected apps</h2>
-                    <p>Supercharge your workflow and connect the tool you use every day.</p>
-                </div>
-                <div class="content-header-actions">
-                    <a href="#" class="button">
-                        <i class="ph-faders-bold"></i>
-                        <span>Filters</span>
-                    </a>
-                    <a href="{% url 'add_tasks' %}" class="button">
-                        <i class="ph-plus-bold"></i>
-                        <span>Add Tasks</span>
-                    </a>
-                </div>
-            </div>
+
+
+                    <label for="task_filter">Filter Using Project  : </label>
+                    <select id="task_filter" name="task_filter">
+                        <option selected disabled=true> Select project</option>
+                        {% for project in projects %}
+                            <option value="{{ project.id }}">{{ project.name }}</option>
+                        {% endfor %}
+                    </select>
+
         </div>
-    </main>
+    </div>
+</main>
 <br>
 
 <table id="example" class="table table-striped table-bordered">
-        <thead>
-            <tr>
-                <th>Task Type</th>
-                <th> Acronym </th>
-                <th>Task Name</th>
-                <th>Related Project</th>
-                <th>Description</th>
-                <th>Assignee</th>
-                <th>Task Status</th>
-                <th>Created by.</th>
-<!--                <th>Updated by.</th>-->
-                <th>Task Priority</th>
-                <th>CRUD</th>
+    <thead>
+    <tr>
+        <th>Task Type</th>
+        <th> Acronym</th>
+        <th>Task Name</th>
+        <th>Project</th>
+        <th>Task Priority</th>
+        <th>Task Status</th>
+        <th>Update</th>
 
-            </tr>
-        </thead>
-        <tbody>
-        {% for task in my_tasks %}
-            <tr>
-                <td>
-                    {% if task.task_type == "bug" %}
-                        <i class="fa fa-bug"></i>
-                    {% else %}
-                        <i class="fa fa-tasks"></i>
-                    {% endif %}
-                </td>
-                <td> {{ task.task_acronym }} </td>
-                <td>{{ task.name }}</td>
-                <td> {{ task.project.name }}</td>
-                <td>{{ task.description }}</td>
-                <td>{{ task.assign }}</td>
-                <td>{{ task.task_status }}</td>
-                <td>{{ task.created_by }}</td>
-<!--                <td>{{ task.updated_by }}</td>-->
-                <td>{{ task.task_priority }}</td>
-                <td><a href="{% url 'edit_tasks' task.id %}"><i class="fas fa-edit"></i></a> &nbsp; <i class="fas fa-trash"></i></td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+    </tr>
+    </thead>
+    <tbody>
+    {% for task in page_obj %}
+
+    {% if task.task_type == "bug" %}
+    <tr style="color: red">
+        <td>
+            <i class="fa fa-bug"></i>
+        </td>
+        <td> {{ task.task_acronym }}</td>
+        <td>{{ task.name }}</td>
+        <td> {{ task.project.name }}</td>
+        <td>{{ task.task_priority }}</td>
+        {% if task.task_status == "todo" %}
+        <td>
+         <button type="button" class="btn btn-outline-danger">To-Do</button>
+        </td>
+        {% elif task.task_status == "in_progress" %}
+        <td>
+            <button type="button" class="btn btn-outline-primary">In Progress</button>
+        </td>
+        {% else %}
+         <td>
+         <button type="button" class="btn btn-outline-success">Completed</button>
+        </td>
+        {% endif %}
+
+
+
+
+        <td><a href="{% url 'edit_tasks' task.id %}"><i class="fas fa-edit"></i></a></td>
+    </tr>
+    {% else %}
+    <tr style="color: green">
+        <td>
+            <i class="fa fa-tasks"></i>
+        </td>
+        <td> {{ task.task_acronym }}</td>
+        <td>{{ task.name }}</td>
+        <td> {{ task.project.name }}</td>
+        <td>{{ task.task_priority }}</td>
+        <td>{{ task.task_status }}</td>
+        <!--                <td>{{ task.updated_by }}</td>-->
+
+        <td><a href="{% url 'edit_tasks' task.id %}"><i class="fas fa-edit"></i></a></td>
+    </tr>
+    {% endif %}
+    {% endfor %}
+
+    </tbody>
+</table>
+
 <!--</div>-->
 
 
-
 {% if messages %}
-        <script>
-            {% for message in messages %}
-                alert("{{ message }}");
-            {% endfor %}
-        </script>
+<script>
+    {%
+        for message in messages %}
+    alert("{{ message }}");
+    {%
+        endfor %
+    }
+</script>
 {% endif %}
 
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+<!-- Pagination-->
+<nav aria-label="Page navigation example" id="navbar">
+        <ul class="pagination justify-content-center">
+            <li class="page-item">
+                <a class="page-link" href="{% url 'view_tasks' 1 %}" tabindex="-1">&laquo; First</a>
+            </li>
+            {% if has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="{% url 'view_tasks' previous_page_no %}" tabindex="-1">&lt; Previous</a>
+                </li>
+            {% endif %}
+            <li class="page-item"><a class="page-link" href="#">{{ current_page }}</a></li>
+            {% if has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{% url 'view_tasks' next_page_no %}">Next &gt;</a>
+                </li>
+            {% endif %}
+            <li class="page-item">
+                <a class="page-link" href="{% url 'view_tasks' last_page %}" tabindex="-1">Last &raquo;</a>
+            </li>
+        </ul>
+    </nav>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
 <!--    <script src="https://code.jquery.com/jquery-3.3.1.js"></script>-->
 <!--    <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>-->
 <!--    <script src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js"></script>-->
 <!--    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>-->
 <!--    <script type="text/javascript" src="{% static 'js/task.js' %}"></script>-->
-
 
 
 {% endblock body %}

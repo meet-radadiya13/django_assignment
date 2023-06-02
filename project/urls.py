@@ -12,10 +12,11 @@ urlpatterns = [
     path("update_projects/", views.update_projects, name="update_projects"),
     path("search_projects/", views.search_projects, name="search_projects"),
 
-    path("view_tasks/", views.view_tasks, name="view_tasks"),
+    path("view_tasks/<int:page_no>", views.view_tasks, name="view_tasks"),
     path("add_tasks/", views.add_tasks, name="add_tasks"),
     path("insert_tasks/", views.insert_tasks, name="insert_tasks"),
     path("edit_tasks/<int:task_id>/", views.edit_tasks, name="edit_tasks"),
     path("update_tasks/", views.update_tasks, name="update_tasks"),
+    # path("task_filter/", views.task_filter, name = "task_filter")
 
 ]

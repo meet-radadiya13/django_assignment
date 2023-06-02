@@ -129,16 +129,51 @@ def search_projects(request):
 
 #For Tasks.
 @login_required()
-def view_tasks(request):
+def view_tasks(request, page_no=1):
+    # current_user = request.user
+    # my_tasks = Task.objects.filter(Q(assign=current_user))
+    # context = {'my_tasks': my_tasks}
+    # return render(request, 'task/task.html', context)
+
     current_user = request.user
-    my_tasks = Task.objects.filter(Q(created_by=current_user) | Q(assign=current_user))
-    context = {'my_tasks': my_tasks}
+    my_tasks = Task.objects.filter(Q(assign=current_user))
+    projects= Project.objects.all()
+
+    context = {}
+    context["projects"] = projects
+
+    if request.GET.get('task_filter'):
+        featured_filter = request.GET.get('task_filter')
+        listings = Task.objects.filter(project=featured_filter)
+    else:
+        listings = Task.objects.all()
+
+    context["listings"] = listings
+
+
+
+
+    paginator = Paginator(my_tasks, 10)
+    page_obj = paginator.get_page(page_no)
+    context["page_obj"] = page_obj.object_list
+    context["has_next"] = page_obj.has_next()
+    if context["has_next"]:
+        context["next_page_no"] = page_obj.next_page_number()
+    else:
+        context["next_page_no"] = 1
+    context["has_previous"] = page_obj.has_previous()
+    if context["has_previous"]:
+        context["previous_page_no"] = page_obj.previous_page_number()
+    else:
+        context["previous_page_no"] = 1
+    context["last_page"] = page_obj.paginator.num_pages
+    context["current_page"] = page_obj.number
     return render(request, 'task/task.html', context)
 
 
 @login_required
 def add_tasks(request):
-    users = User.objects.exclude(username=request.user)
+    users = User.objects.all()
     projects = Project.objects.all()
     context = {'users': users, 'projects': projects}
     return render(request, 'task/add_task.html', context)
@@ -180,3 +215,11 @@ def edit_tasks(request, task_id):
 @require_POST
 def update_tasks(request):
         pass
+
+
+# @login_required
+# def task_filter(request):
+#     projects = Project.objects.all()
+#     context = {'projects': projects}
+#     print(context)
+#     return render(request, 'task/task.html', context)
