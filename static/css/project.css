@@ -131,3 +131,9 @@ div.dis-box {
 .page-link:hover{
     color: #434ce8;
 }
+
+.hover{
+    background-color: #434ce8;
+    color: #FFFFFF;
+    border: 1px solid #dee2e6;
+}

@@ -15,11 +15,15 @@ from project.models import Project
 # Create your views here.
 @login_required
 def view_projects(request, page_no):
+    print(page_no)
     current_user = request.user
-    my_projects = Project.objects.filter(Q(created_by=current_user) | Q(assign=current_user))
+    my_projects = Project.objects.filter(
+        Q(created_by=current_user) | Q(assign=current_user)
+    )
     context = {}
-    paginator = Paginator(my_projects, 2)
+    paginator = Paginator(my_projects, 6)
     page_obj = paginator.get_page(page_no)
+    context["ELLIPSIS"] = page_obj.paginator.ELLIPSIS
     context["page_obj"] = page_obj.object_list
     context["has_next"] = page_obj.has_next()
     if context["has_next"]:
@@ -32,35 +36,42 @@ def view_projects(request, page_no):
     else:
         context["previous_page_no"] = 1
     context["last_page"] = page_obj.paginator.num_pages
-    context["elided_pages"] = paginator.get_elided_page_range(page_no, on_each_side=1, on_ends=2)
+    context["elided_pages"] = paginator.get_elided_page_range(
+        page_no, on_each_side=1, on_ends=2
+    )
     context["current_page"] = page_obj.number
-    return render(request, 'project/project.html', context)
+    # for page_no in context["elided_pages"]:
+    #     print(page_no)
+    #     print(page_no == page_obj.paginator.ELLIPSIS)
+    return render(request, "project/project.html", context)
 
 
 @login_required
 def add_projects(request):
-    users = User.objects.exclude(username=request.user.username)
-    context = {'users': users}
-    return render(request, 'project/add_project.html', context)
+    users = User.objects.exclude(
+        Q(username=request.user.username) | Q(is_superuser=True)
+    )
+    context = {"users": users}
+    return render(request, "project/add_project.html", context)
 
 
 @login_required
 @require_POST
 def insert_projects(request):
-    project_name = request.POST.get('project_name')
-    project_acronym = request.POST.get('project_acronym')
-    project_assignee = request.POST.getlist('assignee')
-    dead_line = request.POST.get('dead_line')
-    tags = request.POST.getlist('tags')
-    project_description = request.POST.get('project_desc')
-    completed = request.POST.get('completed')
+    project_name = request.POST.get("project_name")
+    project_acronym = request.POST.get("project_acronym")
+    project_assignee = request.POST.getlist("assignee")
+    dead_line = request.POST.get("dead_line")
+    tags = request.POST.getlist("tags")
+    project_description = request.POST.get("project_desc")
+    completed = request.POST.get("completed")
     project = Project()
     users = []
     for user in project_assignee:
         users.append(User.objects.filter(username=user))
     project.name = project_name
     project.acronym = project_acronym
-    year, month, date = dead_line.split('-')
+    year, month, date = dead_line.split("-")
     _dead_line = datetime.date(int(year), int(month), int(date))
     project.dead_line = _dead_line
     project.tags = tags
@@ -82,9 +93,13 @@ def insert_projects(request):
 def edit_projects(request, project_id):
     if Project.objects.filter(Q(id=project_id) & Q(created_by=request.user)).exists():
         projects = Project.objects.get(id=project_id)
-        users = User.objects.exclude(Q(username=request.user.username) | Q(is_active=False))
-        context = {'projects': projects, 'users': users}
-        return render(request, 'project/edit_projects.html', context)
+        users = User.objects.exclude(
+            Q(username=request.user.username)
+            | Q(is_active=False)
+            | Q(is_superuser=True)
+        )
+        context = {"projects": projects, "users": users}
+        return render(request, "project/edit_projects.html", context)
     else:
         messages.error(request, "You do not have permission to edit this project.")
         return redirect("view_projects", page_no=1)
@@ -93,11 +108,11 @@ def edit_projects(request, project_id):
 @login_required
 @require_POST
 def update_projects(request):
-    project_id = request.POST.get('project_id')
-    assignee = request.POST.getlist('assignee')
-    dead_line = request.POST.get('dead_line')
-    description = request.POST.get('project_desc')
-    completed = request.POST.get('completed')
+    project_id = request.POST.get("project_id")
+    assignee = request.POST.getlist("assignee")
+    dead_line = request.POST.get("dead_line")
+    description = request.POST.get("project_desc")
+    completed = request.POST.get("completed")
     project = Project.objects.get(id=project_id)
     project.assign.clear()
     users = []
@@ -105,7 +120,7 @@ def update_projects(request):
         users.append(User.objects.filter(username=user))
     for user_obj in users:
         project.assign.add(user_obj[0])
-    year, month, date = dead_line.split('-')
+    year, month, date = dead_line.split("-")
     _dead_line = datetime.date(int(year), int(month), int(date))
     project.dead_line = _dead_line
     project.description = description
@@ -121,24 +136,29 @@ def update_projects(request):
 # noinspection DuplicatedCode
 @login_required
 def search_projects(request):
-    query = request.GET.get('query')
-    page_no = request.GET.get('page_no')
+    query = request.GET.get("query")
+    page_no = request.GET.get("page_no")
     print(page_no)
-    if page_no == 'undefined':
+    if page_no == "undefined":
         page_no = 1
     context = {}
     current_user = request.user
-    projects = Project.objects. \
-        filter(Q(created_by=current_user) | Q(assign=current_user)).values('pk', 'name', 'acronym',
-                                                                           'assign__username',
-                                                                           'is_completed',
-                                                                           'dead_line',
-                                                                           'description',
-                                                                           'tags',
-                                                                           'created_by__username',
-                                                                           'updated_by__username',
-                                                                           'created_at',
-                                                                           'updated_at', )
+    projects = Project.objects.filter(
+        Q(created_by=current_user) | Q(assign=current_user)
+    ).values(
+        "pk",
+        "name",
+        "acronym",
+        "assign__username",
+        "is_completed",
+        "dead_line",
+        "description",
+        "tags",
+        "created_by__username",
+        "updated_by__username",
+        "created_at",
+        "updated_at",
+    )
     if query is not None:
         projects = projects.filter(Q(name__icontains=query))
     paginator = Paginator(projects, 6)

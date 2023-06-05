@@ -18,7 +18,6 @@ class Project(CommonModel):
     assign = models.ManyToManyField(User, blank=True)
     is_completed = models.BooleanField(default=False)
     dead_line = models.DateField(blank=True, null=True)
-    # company = models.ForeignKey('appname.Company', on_delete=models.CASCADE, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     tags = ArrayField(models.CharField(max_length=200), blank=True)
     created_by = models.ForeignKey(

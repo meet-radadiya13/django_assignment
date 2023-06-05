@@ -12,7 +12,11 @@ urlpatterns = [
         login_required(TemplateView.as_view(template_name="root/home.html")),
         name="home",
     ),
-    path("login/", TemplateView.as_view(template_name="user/login.html"), name="login"),
+    path(
+        "login/",
+        TemplateView.as_view(template_name="user/login.html"),
+        name="login",
+    ),
     path("save_user/", views.save_user, name="save_user"),
     path("validate_user/", views.validate_user, name="validate_user"),
     path(
