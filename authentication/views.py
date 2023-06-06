@@ -2,10 +2,12 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.shortcuts import render, redirect
 from django.views.decorators.http import require_POST
 
 from authentication.models import User
+from project.models import Task
 
 
 # Create your views here.
@@ -107,3 +109,16 @@ def edit_password(request):
     else:
         messages.error(request, "Wrong password")
     return redirect("profile")
+
+
+@login_required
+def view_company_users(request):
+    context = {}
+    current_user = request.user
+    company_users = User.objects.filter(Q(company=current_user.company) & Q(is_owner=False)).exclude(is_superuser=True)
+    for user in company_users:
+        assigned_tasks = Task.objects.filter(assign=user.id)
+        user.assigned_tasks = assigned_tasks
+    context["company_users"] = company_users
+
+    return render(request, "company/company.html", context)

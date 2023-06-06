@@ -1,0 +1,11 @@
+thead{
+    color: #404089;
+}
+
+td{
+    color: #404089;
+}
+
+td:hover{
+    color: #434ce8;
+}
