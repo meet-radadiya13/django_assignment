@@ -26,10 +26,10 @@ repos:
     hooks:
       - id: flake8
         language_version: python3
-  - repo: https://github.com/psf/black
-    rev: 23.1.0
-    hooks:
-      - id: black
-        language: python
+#  - repo: https://github.com/psf/black
+#    rev: 23.1.0
+#    hooks:
+#      - id: black
+#        language: python
 
-exclude: ^(\w+/migrations/|templates/|static/|.gitignore|.env|django_assignment/settings.py|manage.py)
+exclude: ^(\w+/migrations/|templates/|static/|.gitignore|.env|django_assignment/settings.py|manage.py|project/apps.py)

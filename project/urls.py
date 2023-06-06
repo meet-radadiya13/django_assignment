@@ -3,7 +3,9 @@ from django.urls import path
 from project import views
 
 urlpatterns = [
-    path("view_projects/<page_no>/", views.view_projects, name="view_projects"),
+    path(
+        "view_projects/<page_no>/", views.view_projects, name="view_projects"
+    ),
     path("add_projects/", views.add_projects, name="add_projects"),
     path("insert_projects/", views.insert_projects, name="insert_projects"),
     path(

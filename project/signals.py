@@ -14,7 +14,8 @@ def task_edit_history(sender, instance, *args, **kwargs):
                 task=current,
                 project=current.project,
                 action_by=current.updated_by,
-                action=f"Task name changed from {previous.name} to {current.name} by {current.updated_by.username} at",
+                action=f"Task name changed from {previous.name} to "
+                f"{current.name} by {current.updated_by.username} at",
             )
             audit_history.save()
         if previous.assign != current.assign:
@@ -22,7 +23,8 @@ def task_edit_history(sender, instance, *args, **kwargs):
                 task=current,
                 project=current.project,
                 action_by=current.updated_by,
-                action=f"Task assignee changed from {previous.assign} to {current.assign} by {current.updated_by.username} at",
+                action=f"Task assignee changed from {previous.assign} to "
+                f"{current.assign} by {current.updated_by.username} at",
             )
             audit_history.save()
         if previous.task_type != current.task_type:
@@ -30,7 +32,8 @@ def task_edit_history(sender, instance, *args, **kwargs):
                 task=current,
                 project=current.project,
                 action_by=current.updated_by,
-                action=f"Task type changed from {previous.task_type} to {current.task_type} by {current.updated_by.username} at",
+                action=f"Task type changed from {previous.task_type} to "
+                f"{current.task_type} by {current.updated_by.username} at",
             )
             audit_history.save()
         if previous.description != current.description:
@@ -38,7 +41,8 @@ def task_edit_history(sender, instance, *args, **kwargs):
                 task=current,
                 project=current.project,
                 action_by=current.updated_by,
-                action=f"Task description changed by {current.updated_by.username} at",
+                action=f"Task description changed by "
+                       f"{current.updated_by.username} at",
             )
             audit_history.save()
         if previous.task_status != current.task_status:
@@ -46,6 +50,7 @@ def task_edit_history(sender, instance, *args, **kwargs):
                 task=current,
                 project=current.project,
                 action_by=current.updated_by,
-                action=f"Task status changed from {previous.task_status} to {current.task_status} by {current.updated_by.username} at",
+                action=f"Task status changed from {previous.task_status} to "
+                f"{current.task_status} by {current.updated_by.username} at",
             )
             audit_history.save()

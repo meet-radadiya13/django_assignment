@@ -91,7 +91,9 @@ def insert_projects(request):
 
 @login_required
 def edit_projects(request, project_id):
-    if Project.objects.filter(Q(id=project_id) & Q(created_by=request.user)).exists():
+    if Project.objects.filter(
+            Q(id=project_id) &
+            Q(created_by=request.user)).exists():
         projects = Project.objects.get(id=project_id)
         users = User.objects.exclude(
             Q(username=request.user.username)
@@ -101,7 +103,9 @@ def edit_projects(request, project_id):
         context = {"projects": projects, "users": users}
         return render(request, "project/edit_projects.html", context)
     else:
-        messages.error(request, "You do not have permission to edit this project.")
+        messages.error(
+            request, "You do not have permission to edit this project."
+        )
         return redirect("view_projects", page_no=1)
 
 
@@ -176,5 +180,4 @@ def search_projects(request):
         context["previous_page_no"] = 1
     context["last_page"] = page_obj.paginator.num_pages
     context["current_page"] = page_obj.number
-    print(context)
     return JsonResponse(context, safe=False)
