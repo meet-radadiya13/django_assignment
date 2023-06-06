@@ -4,7 +4,6 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.views.decorators.http import require_POST
-from django.contrib.auth import update_session_auth_hash
 
 from authentication.models import User
 
@@ -24,9 +23,13 @@ def save_user(request):
     password2 = request.POST.get("password2")
     if password1 == password2:
         User = get_user_model()
-        user = User.objects.create_user(email=email, password=password1, username=name)
+        user = User.objects.create_user(
+            email=email, password=password1, username=name
+        )
         user.save()
-        messages.success(request, "Registered successfully! Login to continue.")
+        messages.success(
+            request, "Registered successfully! Login to continue."
+        )
     else:
         messages.error(request, "Passwords do not match")
     return render(request, "user/login.html", {})

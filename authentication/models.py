@@ -1,5 +1,3 @@
-from enum import unique
-
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
@@ -11,6 +9,25 @@ from .managers import CustomUserManager
 
 
 # Create your models here.
+class CommonModel(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_deleted = models.BooleanField(default=False)
+
+    class Meta:
+        abstract = True
+
+
+class Company(CommonModel):
+    name = models.CharField(max_length=100, null=True, blank=True)
+    address = models.TextField(null=True, blank=True)
+    contact_number = PhoneField(null=True, blank=True)
+    website = models.URLField(null=True, blank=True)
+
+    def __str__(self):
+        return str(self.name)
+
+
 class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(
         _("Username"), default="user", max_length=20, unique=True
@@ -24,7 +41,12 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_superuser = models.BooleanField(verbose_name="superuser", default=False)
     is_staff = models.BooleanField(verbose_name="staff", default=False)
     date_joined = models.DateTimeField(default=timezone.now)
-    image = models.ImageField(upload_to="profiles/", default="profiles/default.png")
+    image = models.ImageField(
+        upload_to="profiles/", default="profiles/default.png"
+    )
+    company = models.ForeignKey(
+        Company, blank=True, null=True, on_delete=models.SET_NULL
+    )
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username"]

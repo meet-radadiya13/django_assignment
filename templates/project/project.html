@@ -13,7 +13,10 @@
     <main class="main">
         <div class="responsive-wrapper">
             <div class="main-header">
-                <h1 class="bold">Projects</h1>
+                <a href="{% url 'add_projects' %}" class="button">
+                    <i class="ph-plus-bold"></i>
+                    <span>Add Projects</span>
+                </a>
                 <div class="search">
                     <form method="get" id="search-form" action="#" style="width: inherit;">
                         {% csrf_token %}
@@ -24,22 +27,6 @@
                     </form>
                     <input type="hidden" id="search-url" data-url="{% url 'search_projects' %}">
                     <input type="hidden" id="edit-url" data-url="{% url 'edit_projects' 1 %}">
-                </div>
-            </div>
-            <div class="content-header">
-                <div class="content-header-intro">
-                    <h2 class="bold">Intergrations and connected apps</h2>
-                    <p>Supercharge your workflow and connect the tool you use every day.</p>
-                </div>
-                <div class="content-header-actions">
-                    <a href="#" class="button">
-                        <i class="ph-faders-bold"></i>
-                        <span>Filters</span>
-                    </a>
-                    <a href="{% url 'add_projects' %}" class="button">
-                        <i class="ph-plus-bold"></i>
-                        <span>Add Projects</span>
-                    </a>
                 </div>
             </div>
         </div>
@@ -74,9 +61,9 @@
                         </li>
                         <li class="dead_line"><b>Deadline:</b> <br> {{ project.dead_line }}</li>
                         <li><b>Created by:</b> <br> {{ project.created_by.username }}</li>
-                        <li><b>Created at:</b> <br> {{ project.created_at }}</li>
+                        <li><b>Created at:</b> <br>{{ project.created_at }}</li>
                         <li><b>Updated by:</b> <br> {{ project.updated_by.username }}</li>
-                        <li><b>Updated at:</b> <br> {{ project.updated_at }}</li>
+                        <li><b>Updated at:</b> <br>{{ project.updated_at }}</li>
                     </ul>
                 </article>
                 <footer class="card-footer">
@@ -99,10 +86,30 @@
             </li>
             {% if has_previous %}
                 <li class="page-item">
-                    <a class="page-link" href="{% url 'view_projects' previous_page_no %}" tabindex="-1">&lt; Previous</a>
+                    <a class="page-link" href="{% url 'view_projects' previous_page_no %}" tabindex="-1">&lt;
+                        Previous</a>
                 </li>
             {% endif %}
-            <li class="page-item"><a class="page-link" href="#">{{ current_page }}</a></li>
+            {% for page_number in elided_pages %}
+                <script type="text/javascript">
+                </script>
+                {% if page_number == ELLIPSIS %}
+                    <li class="page-item">
+                        <span class="page-link">{{ ELLIPSIS }}</span>
+                    </li>
+                {% else %}
+                    {% if page_number == current_page %}
+                        <li class="page-item">
+                            <a class="page-link hover"
+                               href="{% url 'view_projects' page_number %}">{{ page_number }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="{% url 'view_projects' page_number %}">{{ page_number }}</a>
+                        </li>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
             {% if has_next %}
                 <li class="page-item">
                     <a class="page-link" href="{% url 'view_projects' next_page_no %}">Next &gt;</a>
@@ -115,4 +122,107 @@
     </nav>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
     <script type="text/javascript" src="{% static 'js/project.js' %}"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#search-form').keyup(function (event) {
+                event.preventDefault();
+                get_projects(1);
+            });
+        });
+
+        function get_projects(page_no) {
+            let current_request = null;
+            let query = $('#search-input').val();
+            let url = $('#search-url').attr('data-url');
+            let nav = '';
+            current_request = $.ajax({
+                url: url,
+                type: 'GET',
+                data: 'query=' + query + '&page_no=' + page_no,
+                beforeSend: function () {
+                    if (current_request != null) {
+                        current_request.abort();
+                    }
+                },
+                success: function (data) {
+                    $('#card').empty()
+                    $('#navbar').empty()
+                    let res_data = '';
+                    for (var i = 0; i < data.page_obj.length; i++) {
+                        let edit_project = $('#edit-url').attr('data-url');
+                        let edit_url = edit_project.replace("1", data.page_obj[i].pk);
+                        let complete = '<p class="red">pending</p>';
+                        if (data.page_obj[i].is_completed) {
+                            complete = '<p class="green">Completed</p>';
+                        } else {
+                            complete = '<p class="red">Pending</p>';
+                        }
+                        let tags = data.page_obj[i].tags;
+                        let tag_data = '';
+                        for (let tag in tags) {
+                            tag_data += '<ul><li>' + tags[tag] + '</li></ul>'
+                        }
+                        res_data += '<div class="card">\n' +
+                            '                <header class="card-header">\n' +
+                            '                    <h3>' + data.page_obj[i].name + '<a href=' + edit_url + '><i\n' +
+                            '                            class="ph ph-pencil-simple"></i></a>\n' +
+                            '                    </h3>\n' +
+                            '                    <div class="dis-box">\n' +
+                            '                        <p><b>' + data.page_obj[i].acronym + '</b></p>\n' + complete +
+                            '                    </div>\n' +
+                            '                </header>\n' +
+                            '                <article class="card-content">\n' +
+                            '                    <p>\n' +
+                            '                    <ul>\n' +
+                            '                        <li><b>Description:</b> <br>' + data.page_obj[i].description + '</li>\n' +
+                            '                        <li><b>Tags:</b> <br>' + tag_data +
+                            '                        </li>\n' +
+                            '                        <li><b>Deadline:</b> <br> ' + data.page_obj[i].dead_line + '</li>\n' +
+                            '                        <li><b>Created by:</b> <br> ' + data.page_obj[i].created_by__username + '</li>\n' +
+                            '                        <li><b>Created at:</b> <br> ' + change_date(data.page_obj[i].created_at) + '</li>\n' +
+                            '                        <li><b>Updated by:</b> <br>  ' + data.page_obj[i].updated_by__username + '</li>\n' +
+                            '                        <li><b>Updated at:</b> <br> ' + change_date(data.page_obj[i].updated_at) + '</li>\n' +
+                            '                </ul>\n' +
+                            '                </article>\n' +
+                            '                <footer class="card-footer">\n' +
+                            '                    <a class="footer-link">View Tasks</a>\n' +
+                            '                </footer>\n' +
+                            '            </div>'
+                    }
+                    $('#card').html(res_data)
+                    let next = '';
+                    let previous = '';
+                    if (data.has_previous) {
+                        previous = '<li class="page-item">' +
+                            '<a class="page-link paginator" href="#" page_no=' + data.previous_page_no + ' tabindex="-1">&lt;Previous</a>' +
+                            '</li>'
+                    }
+                    if (data.has_next) {
+                        next = '<li class="page-item">' +
+                            '<a id="next" class="page-link paginator" href="#" page_no=' + data.next_page_no + '>Next &gt;</a>' +
+                            '</li>'
+                    }
+                    nav = '<ul class="pagination justify-content-center">' +
+                        '<li class="page-item">' +
+                        '<a class="page-link paginator" href="#" page_no=1 tabindex="-1">&laquo; First</a>' +
+                        '</li>' +
+                        previous +
+                        '<li class="page-item"><a class="page-link paginator" href="#" page_no=' + data.current_page + '>' + data.current_page + '</a></li>' +
+                        next +
+                        '<li class="page-item">' +
+                        '<a class="page-link paginator" href="#" page_no=' + data.last_page + ' tabindex="-1">Last &raquo;</a>' +
+                        '</li>' +
+                        '</ul>'
+                    $('#navbar').html(nav)
+                },
+                complete: function () {
+                    current_request = null;
+                }
+            });
+        }
+
+        $(document).on('click', '.paginator', function () {
+            get_projects($(this).attr('page_no'))
+        });
+    </script>
 {% endblock body %}
