@@ -35,14 +35,32 @@ Tasks
 
             </div>
 
+                        <form name="filter-form" method="get" class="filter-form" id="filter-form">
+                                 {% csrf_token %}
+                                <label for="task_filter" style="margin-left:-130%;">Filter Using Project  : </label>
+                                <select id="task_filter" name="task_filter" style="margin-left:3%;">
+                                    <option selected disabled=true> Select project</option>
+                                    {% for project in projects %}
+                                        <option value="{{ project.name }}">{{ project.name }}</option>
+                                    {% endfor %}
+                                </select>
+                             <input type="hidden" id="filter-url" data-url="{% url 'filter_tasks' %}">
+                        </form>
 
-                    <label for="task_filter">Filter Using Project  : </label>
-                    <select id="task_filter" name="task_filter">
-                        <option selected disabled=true> Select project</option>
-                        {% for project in projects %}
-                            <option value="{{ project.id }}">{{ project.name }}</option>
-                        {% endfor %}
-                    </select>
+
+
+            <div class="search">
+                <form method="get" id="search-form" action="#" style="width: inherit;">
+                    {% csrf_token %}
+                    <input id="search-input" type="text" placeholder="Search" name="search" value="{{ name }}"/>
+                    <button type="submit">
+                        <i class="ph-magnifying-glass-bold"></i>
+                    </button>
+                </form>
+
+                <input type="hidden" id="search-url" data-url="{% url 'search_tasks' %}">
+                <input type="hidden" id="edit-url" data-url="{% url 'edit_tasks' 1 %}">
+            </div>
 
         </div>
     </div>
@@ -62,7 +80,7 @@ Tasks
 
     </tr>
     </thead>
-    <tbody>
+    <tbody id="outer">
     {% for task in page_obj %}
 
     {% if task.task_type == "bug" %}
@@ -76,19 +94,17 @@ Tasks
         <td>{{ task.task_priority }}</td>
         {% if task.task_status == "todo" %}
         <td>
-         <button type="button" class="btn btn-outline-danger">To-Do</button>
+            <button type="button" class="btn btn-outline-danger">To-Do</button>
         </td>
         {% elif task.task_status == "in_progress" %}
         <td>
             <button type="button" class="btn btn-outline-primary">In Progress</button>
         </td>
         {% else %}
-         <td>
-         <button type="button" class="btn btn-outline-success">Completed</button>
+        <td>
+            <button type="button" class="btn btn-outline-success">Completed</button>
         </td>
         {% endif %}
-
-
 
 
         <td><a href="{% url 'edit_tasks' task.id %}"><i class="fas fa-edit"></i></a></td>
@@ -118,37 +134,45 @@ Tasks
 
 {% if messages %}
 <script>
-    {%
-        for message in messages %}
+    {% for message in messages %}
     alert("{{ message }}");
-    {%
-        endfor %
-    }
+    {% endfor %}
 </script>
 {% endif %}
 
 <!-- Pagination-->
 <nav aria-label="Page navigation example" id="navbar">
-        <ul class="pagination justify-content-center">
-            <li class="page-item">
-                <a class="page-link" href="{% url 'view_tasks' 1 %}" tabindex="-1">&laquo; First</a>
-            </li>
-            {% if has_previous %}
-                <li class="page-item">
-                    <a class="page-link" href="{% url 'view_tasks' previous_page_no %}" tabindex="-1">&lt; Previous</a>
-                </li>
-            {% endif %}
-            <li class="page-item"><a class="page-link" href="#">{{ current_page }}</a></li>
-            {% if has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="{% url 'view_tasks' next_page_no %}">Next &gt;</a>
-                </li>
-            {% endif %}
-            <li class="page-item">
-                <a class="page-link" href="{% url 'view_tasks' last_page %}" tabindex="-1">Last &raquo;</a>
-            </li>
-        </ul>
-    </nav>
+    <ul class="pagination justify-content-center">
+        <li class="page-item">
+            <a class="page-link" href="{% url 'view_tasks' 1 %}" tabindex="-1">&laquo; First</a>
+        </li>
+        {% if has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="{% url 'view_tasks' previous_page_no %}" tabindex="-1">&lt;
+                Previous</a>
+        </li>
+        {% endif %}
+        {% for page_number in elided_pages %}
+        {% if page_number == page_obj.paginator.ELLIPSIS %}
+        <li class="page-item">
+            <a class="page-link" href="#">...</a>
+        </li>
+        {% else %}
+        <li class="page-item">
+            <a class="page-link" href="{% url 'view_tasks' page_number %}">{{ page_number }}</a>
+        </li>
+        {% endif %}
+        {% endfor %}
+        {% if has_next %}
+        <li class="page-item">
+            <a class="page-link" href="{% url 'view_tasks' next_page_no %}">Next &gt;</a>
+        </li>
+        {% endif %}
+        <li class="page-item">
+            <a class="page-link" href="{% url 'view_tasks' last_page %}" tabindex="-1">Last &raquo;</a>
+        </li>
+    </ul>
+</nav>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
 <!--    <script src="https://code.jquery.com/jquery-3.3.1.js"></script>-->
@@ -156,6 +180,121 @@ Tasks
 <!--    <script src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js"></script>-->
 <!--    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>-->
 <!--    <script type="text/javascript" src="{% static 'js/task.js' %}"></script>-->
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('#search-form').keyup(function (event) {
+            event.preventDefault();
+            let query = $('#search-input').val();
+            let url = $('#search-url').attr('data-url');
+            get_tasks(1, query, url);
+        });
+        $('#task_filter').change(function (event) {
+            event.preventDefault();
+            let query = $('#task_filter').val();
+            let url = $('#filter-url').attr('data-url');
+            get_tasks(1, query, url);
+        });
+    });
+
+    function get_tasks(page_no, query, url) {
+        let current_request = null;
+        let nav = '';
+        console.log('pageno=', page_no)
+        current_request = $.ajax({
+            url: url,
+            type: 'GET',
+            data: 'query=' + query + '&page_no=' + page_no,
+            beforeSend: function () {
+                if (current_request != null) {
+                    current_request.abort();
+                }
+            },
+            success: function (data) {
+                $('#outer').empty()
+                $('#navbar').empty()
+                console.log(data.page_obj[0].task_type)
+                let res_data = '';
+                for (var i = 0; i < data.page_obj.length; i++) {
+                    let edit_task = $('#edit-url').attr('data-url');
+                    let edit_url = edit_task.replace("1", data.page_obj[i].pk);
+                    let status = ''
+                    if (data.page_obj[i].task_status == "todo") {
+                        status = '<td>\n' +
+                            '         <button type="button" class="btn btn-outline-danger">To-Do</button>\n' +
+                            '        </td>\n'
+                    } else if (data.page_obj[i].task_status == "in_progress") {
+                        status = '<td>\n' +
+                            '            <button type="button" class="btn btn-outline-primary">In Progress</button>\n' +
+                            '        </td>\n'
+                    } else {
+                        status = '<td>\n' +
+                            ' <button type="button" class="btn btn-outline-success">Completed</button>\n' +
+                            ' </td>\n'
+                    }
+
+                    if (data.page_obj[i].task_type == "bug") {
+                        res_data += '    <tr style="color: red" >\n' +
+                            '        <td>\n' +
+                            '            <i class="fa fa-bug"></i>\n' +
+                            '        </td>\n' +
+                            '        <td>' + data.page_obj[i].task_acronym + '</td>\n' +
+                            '        <td>' + data.page_obj[i].name + '</td>\n' +
+                            '        <td>' + data.page_obj[i].project__name + '</td>\n' +
+                            '        <td>' + data.page_obj[i].task_priority + '</td>\n' + status +
+                            '<td><a href=' + edit_url + '><i class="fas fa-edit"></i></a></td>' +
+                            '    </tr>\n'
+                    } else {
+                        res_data += '    <tr style="color: green" >\n' +
+                            '        <td>\n' +
+                            '            <i class="fa fa-bug"></i>\n' +
+                            '        </td>\n' +
+                            '        <td>' + data.page_obj[i].task_acronym + '</td>\n' +
+                            '        <td>' + data.page_obj[i].name + '</td>\n' +
+                            '        <td>' + data.page_obj[i].project__name + '</td>\n' +
+                            '        <td>' + data.page_obj[i].task_priority + '</td>\n' + status +
+                            '        <td>' + '<a href=' + edit_url + '>'+'<i class="fas fa-edit"></i></a></td>' +
+                            '    </tr>\n'
+                    }
+                }
+                $('#outer').html(res_data)
+                let next = '';
+                let previous = '';
+                if (data.has_previous) {
+                    previous = '<li class="page-item">' +
+                        '<a class="page-link paginator" href="#" page_no=' + data.previous_page_no + ' tabindex="-1">&lt;Previous</a>' +
+                        '</li>'
+                }
+                if (data.has_next) {
+                    next = '<li class="page-item">' +
+                        '<a id="next" class="page-link paginator" href="#" page_no=' + data.next_page_no + '>Next &gt;</a>' +
+                        '</li>'
+                }
+                nav = '<ul class="pagination justify-content-center">' +
+                    '<li class="page-item">' +
+                    '<a class="page-link paginator" href="#" page_no=1 tabindex="-1">&laquo; First</a>' +
+                    '</li>' +
+                    previous +
+                    '<li class="page-item"><a class="page-link paginator" href="#" page_no=' + data.current_page + '>' + data.current_page + '</a></li>' +
+                    next +
+                    '<li class="page-item">' +
+                    '<a class="page-link paginator" href="#" page_no=' + data.last_page + ' tabindex="-1">Last &raquo;</a>' +
+                    '</li>' +
+                    '</ul>'
+                $('#navbar').html(nav)
+            },
+            complete: function() {
+                current_request = null;
+            }
+        });
+    }
+
+
+    $(document).on('click', '.paginator', function () {
+        get_tasks($(this).attr('page_no'))
+    });
+</script>
+
+
 
 
 {% endblock body %}
