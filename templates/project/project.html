@@ -92,8 +92,6 @@
             {% endif %}
             {% for page_number in elided_pages %}
                 <script type="text/javascript">
-                    console.log('{{page_number}}');
-                    console.log('{{ELLIPSIS}}');
                 </script>
                 {% if page_number == ELLIPSIS %}
                     <li class="page-item">
@@ -137,7 +135,6 @@
             let query = $('#search-input').val();
             let url = $('#search-url').attr('data-url');
             let nav = '';
-            console.log('pageno=', page_no)
             current_request = $.ajax({
                 url: url,
                 type: 'GET',

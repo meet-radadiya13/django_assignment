@@ -17,14 +17,12 @@ body {
 
 @media (min-width: 500px) {
     .card-grid {
-        /*     grid-template-columns: 1fr 1fr; */
         grid-template-columns: repeat(2, 1fr);
     }
 }
 
 @media (min-width: 900px) {
     .card-grid {
-        /*     grid-template-columns: 1fr 1fr 1fr; */
         grid-template-columns: repeat(3, 1fr);
     }
 }
@@ -58,16 +56,6 @@ body {
     display: flex;
     justify-content: space-between;
 }
-
-/* You can also use CSS Grid for the footer nav */
-
-/* .card-footer-nav {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: grid;
-  grid-template-columns: 1fr 1fr auto auto
-} */
 
 .card-footer-item {
     color: white;

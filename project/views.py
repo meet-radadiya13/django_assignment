@@ -15,7 +15,6 @@ from project.models import Project
 # Create your views here.
 @login_required
 def view_projects(request, page_no):
-    print(page_no)
     current_user = request.user
     my_projects = Project.objects.filter(
         Q(created_by=current_user) | Q(assign=current_user)
@@ -40,9 +39,6 @@ def view_projects(request, page_no):
         page_no, on_each_side=1, on_ends=2
     )
     context["current_page"] = page_obj.number
-    # for page_no in context["elided_pages"]:
-    #     print(page_no)
-    #     print(page_no == page_obj.paginator.ELLIPSIS)
     return render(request, "project/project.html", context)
 
 
@@ -137,12 +133,10 @@ def update_projects(request):
     return redirect("view_projects", page_no=1)
 
 
-# noinspection DuplicatedCode
 @login_required
 def search_projects(request):
     query = request.GET.get("query")
     page_no = request.GET.get("page_no")
-    print(page_no)
     if page_no == "undefined":
         page_no = 1
     context = {}
