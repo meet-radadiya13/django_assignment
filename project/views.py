@@ -188,6 +188,10 @@ def view_tasks(request, page_no=1):
     my_tasks = Task.objects.filter(Q(assign=current_user))
     projects = Project.objects.all()
 
+    all_tasks = request.GET.get("task_filter")
+    if(all_tasks =="all"):
+        return redirect("view_tasks",page_no=1)
+
     context = {}
     context["projects"] = projects
 
@@ -222,7 +226,7 @@ def add_tasks(request):
 @require_POST
 def insert_tasks(request):
     task_name = request.POST.get('task_name')
-    task_acronym = request.POST.get('task_acronym')
+    # task_acronym = request.POST.get('task_acronym')
     task_assignee = request.POST.get('assignee')
     task_description = request.POST.get('task_desc')
     task_related_project = request.POST.get('related-project-name')
@@ -230,11 +234,13 @@ def insert_tasks(request):
     task_status = request.POST['task-status']
     task_priority = request.POST['task-priority']
     task = Task()
+    project_acronym = Project.objects.get(pk = task_related_project)
+    task_acronym_partial = project_acronym.acronym
 
     task.project = Project.objects.get(pk=task_related_project)
     task.assign = User.objects.get(pk=task_assignee)
     task.name = task_name
-    task.task_acronym = task_acronym
+    task.task_acronym = task_acronym_partial
     task.description = task_description
     task.created_by = request.user
     task.updated_by = request.user
@@ -248,13 +254,50 @@ def insert_tasks(request):
 
 @login_required
 def edit_tasks(request, task_id):
-    pass
+    if Task.objects.filter(Q(id=task_id) & Q(assign=request.user)).exists():
+        tasks = Task.objects.get(id=task_id)
+        users = User.objects.exclude(Q(username=request.user.username))
+        projects = Project.objects.all()
+
+        context = {"tasks": tasks, "users": users,"projects":projects}
+        return render(request, "task/edit_tasks.html", context)
+    else:
+        return redirect("view_tasks", page_no=1)
+
 
 
 @login_required
 @require_POST
 def update_tasks(request):
-    pass
+    task_id = request.POST.get("task_id")
+    acronym = request.POST.get("task_acronym")
+    task_type = request.POST.get("task-type")
+    task_name = request.POST.get("task_name")
+    assignee = request.POST.get("assignee")
+    task_status = request.POST.get("task-status")
+    task_priority = request.POST.get("task-priority")
+
+    task = Task.objects.get(id=task_id)
+
+    # task.assign.clear()
+    # users = []
+    # for user in assignee:
+    #     users.append(User.objects.filter(username=user))
+
+    task.task_status = task_status
+    task.task_priority = task_priority
+    task.task_type = task_type
+    task.assignee = assignee
+    task.name = task_name
+    task.task_acronym = acronym
+    task.updated_by = request.user
+
+    # if completed:
+    #     project.is_completed = True
+    # else:
+    #     project.is_completed = False
+    task.save()
+    return redirect("view_tasks", page_no=1)
 
 @login_required
 def search_tasks(request):

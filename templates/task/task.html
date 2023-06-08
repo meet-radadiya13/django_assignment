@@ -23,6 +23,7 @@ Tasks
 <!--<br>-->
 
 <main class="main">
+
     <div class="responsive-wrapper">
 
         <div class="content-header">
@@ -40,6 +41,7 @@ Tasks
                                 <label for="task_filter" style="margin-left:-130%;">Filter Using Project  : </label>
                                 <select id="task_filter" name="task_filter" style="margin-left:3%;">
                                     <option selected disabled=true> Select project</option>
+                                    <option value="all">All Projects</option>
                                     {% for project in projects %}
                                         <option value="{{ project.name }}">{{ project.name }}</option>
                                     {% endfor %}
@@ -71,7 +73,7 @@ Tasks
     <thead>
     <tr>
         <th>Task Type</th>
-        <th> Acronym</th>
+<!--        <th> Acronym</th>-->
         <th>Task Name</th>
         <th>Project</th>
         <th>Task Priority</th>
@@ -88,10 +90,26 @@ Tasks
         <td>
             <i class="fa fa-bug"></i>
         </td>
-        <td> {{ task.task_acronym }}</td>
-        <td>{{ task.name }}</td>
+<!--        <td> {{ task.task_acronym }}</td>-->
+        <td>{{ task.task_acronym }}-{{ task.name }}</td>
         <td> {{ task.project.name }}</td>
-        <td>{{ task.task_priority }}</td>
+
+        {% if task.task_priority == "hi" %}
+        <td>
+            <button type="button" class="btn btn-outline-danger">High</button>
+        </td>
+        {% elif task.task_priority == "medium" %}
+        <td>
+            <button type="button" class="btn btn-outline-primary">Medium</button>
+        </td>
+        {% else %}
+        <td>
+            <button type="button" class="btn btn-outline-success">Low</button>
+        </td>
+        {% endif %}
+
+
+
         {% if task.task_status == "todo" %}
         <td>
             <button type="button" class="btn btn-outline-danger">To-Do</button>
@@ -114,12 +132,39 @@ Tasks
         <td>
             <i class="fa fa-tasks"></i>
         </td>
-        <td> {{ task.task_acronym }}</td>
+<!--        <td> {{ task.task_acronym }}</td>-->
         <td>{{ task.name }}</td>
         <td> {{ task.project.name }}</td>
-        <td>{{ task.task_priority }}</td>
-        <td>{{ task.task_status }}</td>
-        <!--                <td>{{ task.updated_by }}</td>-->
+
+        {% if task.task_priority == "hi" %}
+        <td>
+            <button type="button" class="btn btn-outline-danger">High</button>
+        </td>
+        {% elif task.task_priority == "medium" %}
+        <td>
+            <button type="button" class="btn btn-outline-primary">Medium</button>
+        </td>
+        {% else %}
+        <td>
+            <button type="button" class="btn btn-outline-success">Low</button>
+        </td>
+        {% endif %}
+
+
+        {% if task.task_status == "todo" %}
+        <td>
+            <button type="button" class="btn btn-outline-danger">To-Do</button>
+        </td>
+        {% elif task.task_status == "in_progress" %}
+        <td>
+            <button type="button" class="btn btn-outline-primary">In Progress</button>
+        </td>
+        {% else %}
+        <td>
+            <button type="button" class="btn btn-outline-success">Completed</button>
+        </td>
+        {% endif %}
+
 
         <td><a href="{% url 'edit_tasks' task.id %}"><i class="fas fa-edit"></i></a></td>
     </tr>

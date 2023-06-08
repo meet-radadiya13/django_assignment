@@ -15,36 +15,114 @@
         <div class="col-md-12">
             <form action="{% url 'update_tasks' %}" method="post">
             {% csrf_token %}
-            <input type="hidden" name="task_id" value="{{ projects.id }}">
+            {% if tasks.created_by == request.user %}
+            <input type="hidden" name="task_id" value="{{ tasks.id }}">
                 <fieldset>
-                    <legend><span class="number">1</span> Your Project Info</legend>
+                    <legend><span class="number">1</span> Your Task Info</legend>
 
-                    <label for="projectname">Project Name:</label>
-                    <input type="text" id="projectname" name="project_name" value="{{ projects.name }}" disabled>
+                    <label for="taskname">Task Name:</label>
+                    <input type="text" id="taskname" name="task_name" value="{{ tasks.name }}">
 
-                    <label for="acronym">Project Acronym:</label>
-                    <input type="text" id="acronym" name="project_acronym" value="{{ projects.acronym }}" disabled>
+                    <label for="acronym">Task Acronym:</label>
+                    <input type="text" id="acronym" name="task_acronym" value="{{ tasks.task_acronym }}" disabled>
 
-                    <label for="job">Project Assignee</label>
-                    <select id="job" class="js-example-basic-multiple selectfield" name="assignee" multiple="multiple">
-                        {% for user in users %}
-                            <option value="{{ user }}" {% if user in projects.assign.all %} selected {% endif %}>{{ user.username }}</option>
+                     <label for="task-type">Task Type:</label>
+                        <select name="task-type" id="task-type">
+                            <option value="task">Task</option>
+                            <option value="bug">Bug</option>
+                        </select>
+
+                    <label for="related-project-name">Related project</label>
+                    <select id="related-project-name" name="related-project-name">
+                        {% for project in projects %}
+                            <option value="{{ project.id }}">{{ project.name }}</option>
                         {% endfor %}
                     </select>
 
-                    <label for="date">Dead Line:</label>
-                    <input type="date" id="date" name="dead_line" value="{{ projects.dead_line|date:'Y-m-d' }}">
+                    <label for="assignee">Task Assignee</label>
+                    <select id="assignee" name="assignee">
+                        <option value="{{request.user.id}}" selected> {{ request.user.username }}</option>
+                        {% for user in users %}
+                            <option value="{{ user.id }}">{{ user.username }}</option>
+                        {% endfor %}
+                    </select>
 
-                    <label for="description">Project Description:</label>
-                    <textarea id="description" name="project_desc">{{ projects.description }}</textarea>
+                     <label for="task-status">Task Status:</label>
+                         <select name="task-status" id="task-status">
+                            <option value="todo" >To-Do</option>
+                            <option value="in-progress" >In-progress</option>
+                            <option value="completed">Completed</option>
 
-                    <input type="checkbox" id="completed" {% if projects.is_completed %} checked {% endif %} name="completed"><label
-                        class="light" for="completed">Mark as completed</label><br>
+                         </select>
+
+                     <label for="task-priority">Task Priority:</label>
+                            <select name="task-priority" id="task-priority">
+                                <option value="Low">Low</option>
+                                <option value="Medium">Medium</option>
+                                <option value="High">High</option>
+
+                            </select>
 
                 </fieldset>
 
                 <button type="submit">Update Project</button>
 
+                {% else %}
+
+                        <input type="hidden" name="task_id" value="{{ tasks.id }}">
+                <fieldset>
+                    <legend><span class="number">1</span> Your Task Info</legend>
+
+                    <label for="taskname">Task Name:</label>
+                    <input type="text" id="taskname" name="task_name" value="{{ tasks.name }}" disabled>
+
+                    <label for="acronym">Task Acronym:</label>
+                    <input type="text" id="acronym" name="task_acronym" value="{{ tasks.task_acronym }}" disabled>
+
+                     <label for="task-type">Task Type:</label>
+                        <select name="task-type" id="task-type" disabled>
+                            <option value="task">Task</option>
+                            <option value="bug">Bug</option>
+                        </select>
+
+                    <label for="related-project-name">Related project</label>
+                    <select id="related-project-name" name="related-project-name" disabled>
+                        {% for project in projects %}
+                            <option value="{{ project.id }}">{{ project.name }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <label for="assignee">Task Assignee</label>
+                    <select id="assignee" name="assignee" disabled>
+                        <option value="{{request.user.id}}" selected> {{ request.user.username }}</option>
+                        {% for user in users %}
+                            <option value="{{ user.id }}">{{ user.username }}</option>
+                        {% endfor %}
+                    </select>
+
+                     <label for="task-status">Task Status:</label>
+                         <select name="task-status" id="task-status">
+                            <option value="todo">To-Do</option>
+                            <option value="in-progress">In-progress</option>
+                            <option value="completed" >Completed</option>
+
+                         </select>
+
+                     <label for="task-priority">Task Priority:</label>
+                            <select name="task-priority" id="task-priority" disabled>
+                                <option value="Low">Low</option>
+                                <option value="Medium">Medium</option>
+                                <option value="High">High</option>
+
+                            </select>
+
+                </fieldset>
+
+                <button type="submit">Update Project</button>
+
+
+
+                {% endif %}
             </form>
         </div>
     </div>
