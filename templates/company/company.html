@@ -7,39 +7,177 @@
 
 {% block styles %}
     <link href="{% static 'css/company.css' %}" rel="stylesheet" type="text/css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-theme/0.1.0-beta.10/select2-bootstrap.css"
+          integrity="sha512-CbQfNVBSMAYmnzP3IC+mZZmYMP2HUnVkV4+PwuhpiMUmITtSpS7Prr3fNncV1RBOnWxzz4pYQ5EAGG4ck46Oig=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
 {% endblock styles %}
 
 {% block body %}
-    <main class="main">
-    <div class="table-responsive responsive-wrapper">
-        <table class="table table-hover">
-            <thead>
-            <tr>
-                <th scope="col">Name</th>
-                <th scope="col">Username</th>
-                <th scope="col">Email</th>
-                <th scope="col">Contact no.</th>
-                <th scope="col">Assigned Tasks</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for user in company_users %}
-            <tr>
-                <td>{{ user.firstname }} {{ user.lastname }}</td>
-                <td>{{ user.username }}</td>
-                <td>{{user.email}}</td>
-                <td>{{user.contact_no}}</td>
-                <td>
-                    <ul>
-                        {% for task in user.assigned_tasks %}
-                            <li>{{ task.name }}</li>
-                        {% endfor %}
-                    </ul>
-                </td>
-            </tr>
+    {% if messages %}
+        <script>
+            {% for message in messages %}
+                alert("{{ message }}");
             {% endfor %}
-            </tbody>
-        </table>
-    </div>
+        </script>
+    {% endif %}
+    <script src="https://rawgit.com/moment/moment/2.2.1/min/moment.min.js"></script>
+    <script>
+        function change_date(dateString) {
+            const date = moment(dateString, 'MMM DD, YYYY, hh:mm a');
+            console.log(date);
+            const localDate = date.toLocaleString('en-US', {
+                timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                hour12: true
+            }).split(' ');
+            return localDate[1] + ' ' + localDate[2] + ', ' + localDate[3] + ', ' + localDate[4];
+        }
+    </script>
+    <main class="main">
+        <div class="table-responsive responsive-wrapper">
+            <div class="main-header">
+                <input type="hidden" id="delete-url" data-url="{% url 'delete_user' 1 %}">
+                <button type="button" class="button" data-toggle="modal" data-target="#sendEmailModal">
+                    <i class="ph-plus-bold"></i>
+                    <span>Add Users</span>
+                </button>
+                <!-- Modal -->
+                <div class="modal fade" id="sendEmailModal" tabindex="-1" role="dialog"
+                     aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="exampleModalLongTitle">Invite a user</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <form method="post" action="{% url 'add_users' %}">
+                                {% csrf_token %}
+                                <div class="modal-body">
+                                    <div class="form-group">
+                                        <label for="email">Email address</label>
+                                        <input type="email" class="form-control" id="email"
+                                               placeholder="Enter email" name="email"><br>
+                                        <label for="firstname">First name</label>
+                                        <input type="text" class="form-control" id="firstname"
+                                               placeholder="Enter firstname" name="firstname"><br>
+                                        <label for="lastname">Last name</label>
+                                        <input type="text" class="form-control" id="lastname"
+                                               placeholder="Enter lastname" name="lastname"><br>
+                                        <label for="projects">Select Project</label><br>
+                                        <select id="projects" class="js-example-basic-single form-control"
+                                                name="projects">
+                                            {% for project in projects %}
+                                                <option value="{{ project.id }}">{{ project.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                    <button type="submit" class="btn btn-primary submit">Save changes</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="search">
+                    <form method="get" id="search-form" action="#" style="width: inherit;">
+                        {% csrf_token %}
+                        <input id="search-input" type="text" placeholder="Search" name="search" value="{{ name }}"/>
+                        <button type="submit">
+                            <i class="ph-magnifying-glass-bold"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <table class="table table-hover">
+                <thead>
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Email</th>
+                    <th scope="col">Contact no.</th>
+                    <th scope="col">Date Joined</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody id="table">
+                {% for user in company_users %}
+                    <tr>
+                        <td>{{ user.firstname }} {{ user.lastname }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.contact_no }}</td>
+                        <td>{{ user.date_joined }}</td>
+                        <td><a href="{% url 'delete_user' user.id %}"><i class="ph ph-trash"></i></a></td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </main>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+            integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+            crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js"
+            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+            crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js"
+            integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+            crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('.js-example-basic-single').select2({
+                theme: "bootstrap"
+            });
+            $('#search-form').keyup(function (event) {
+                event.preventDefault();
+                get_users(1);
+            });
+        });
+
+        function get_users(page_no) {
+            let current_request = null;
+            let query = $('#search-input').val();
+            // let nav = '';
+            current_request = $.ajax({
+                url: "{% url 'search_users' %}",
+                type: 'GET',
+                data: 'query=' + query + '&page_no=' + page_no,
+                beforeSend: function () {
+                    if (current_request != null) {
+                        current_request.abort();
+                    }
+                },
+                success: function (data) {
+                    $('#table').empty()
+                    let res_data = '';
+                    for (var i = 0; i < data.page_obj.length; i++) {
+                        let delete_id = $('#delete-url').attr('data-url');
+                        let delete_url = delete_id.replace("1", data.page_obj[i].pk)
+                        res_data += '<tr>' +
+                            '<td>' + data.page_obj[i].firstname + ' ' + data.page_obj[i].lastname + '</td>' +
+                            '<td>' + data.page_obj[i].email + '</td>' +
+                            '<td>' + data.page_obj[i].raw_phone + '</td>' +
+                            '<td>' + change_date_js(data.page_obj[i].date_joined) + '</td>' +
+                            '<td><a href='+ delete_url+ '><i class="ph ph-trash"></i></a></td>' +
+                            '</tr>'
+                    }
+                    $('#table').html(res_data)
+                },
+                complete: function () {
+                    current_request = null;
+                }
+            });
+
+            function change_date_js(dateString) {
+                return new Date(dateString).toLocaleString(undefined, {
+                    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    hour12: true
+                });
+            }
+        }
+    </script>
 {% endblock body %}

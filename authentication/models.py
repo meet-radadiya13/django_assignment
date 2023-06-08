@@ -48,6 +48,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         Company, blank=True, null=True, on_delete=models.SET_NULL
     )
     is_owner = models.BooleanField(default=False)
+    has_changed_password = models.BooleanField(default=False)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username"]
