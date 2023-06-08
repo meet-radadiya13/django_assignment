@@ -97,7 +97,6 @@ ul {
     list-style-type: none;
     margin: 0;
     padding: 0;
-/*    overflow: hidden;*/
     display: flex;
     align-items: center;
 }
@@ -171,7 +170,6 @@ li a:hover {
 }
 
 .central-body{
-/*    width: 100%;*/
     padding: 17% 5% 10% 5%;
     text-align: center;
 }
@@ -195,17 +193,12 @@ li a:hover {
     top: 20%;
     left: 15%;
     z-index: 90;
-/*    animation: spin-earth 100s infinite linear both;*/
 }
 
 .object_moon{
     position: absolute;
     top: 12%;
     left: 25%;
-/*
-    transform: rotate(0deg);
-    transition: transform ease-in 99999999999s;
-*/
 }
 
 .earth-moon{

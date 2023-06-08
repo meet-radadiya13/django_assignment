@@ -93,7 +93,6 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
-DATETIME_FORMAT = '%d-%m-%Y %H:%M:%S'
 
 LANGUAGE_CODE = 'en-us'
 
@@ -101,9 +100,7 @@ TIME_ZONE = 'UTC'
 
 USE_I18N = True
 
-USE_L10N = True
-
-USE_TZ = False
+USE_TZ = True
 
 SITE_ID = 1
 
@@ -128,7 +125,7 @@ AUTH_USER_MODEL = 'authentication.User'
 
 AUTH_USERNAME_FIELD = 'email'
 
-# SESSION_COOKIE_AGE = 180
+SESSION_COOKIE_AGE = 24 * 60 * 60
 
 SESSION_SAVE_EVERY_REQUEST = True
 

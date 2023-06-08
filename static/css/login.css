@@ -20,7 +20,6 @@ body {
     color: #a0a5a8;
 }
 
-/**/
 .main {
     position: relative;
     width: 1000px;
@@ -159,7 +158,6 @@ body {
     background-color: #434ce8;
 }
 
-/**/
 .a-container {
     z-index: 100;
     left: calc(100% - 600px);
@@ -233,7 +231,6 @@ body {
     transition: 0.25s;
 }
 
-/**/
 .is-txr {
     left: calc(100% - 400px);
     transition: 1.25s;
