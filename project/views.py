@@ -18,7 +18,7 @@ def view_projects(request, page_no):
     current_user = request.user
     my_projects = Project.objects.filter(
         Q(created_by=current_user) | Q(assign=current_user)
-    )
+    ).exclude(is_deleted=True)
     context = {}
     paginator = Paginator(my_projects, 6)
     page_obj = paginator.get_page(page_no)
@@ -46,7 +46,7 @@ def view_projects(request, page_no):
 def add_projects(request):
     users = User.objects.exclude(
         Q(username=request.user.username) | Q(is_superuser=True)
-    )
+    ).exclude(is_active=False)
     context = {"users": users}
     return render(request, "project/add_project.html", context)
 
