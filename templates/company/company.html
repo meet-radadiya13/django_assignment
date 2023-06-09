@@ -67,8 +67,8 @@
                                         <input type="text" class="form-control" id="lastname"
                                                placeholder="Enter lastname" name="lastname"><br>
                                         <label for="projects">Select Project</label><br>
-                                        <select id="projects" class="js-example-basic-single form-control"
-                                                name="projects">
+                                        <select id="projects" class="js-example-basic-multiple form-control"
+                                                name="projects" multiple="multiple">
                                             {% for project in projects %}
                                                 <option value="{{ project.id }}">{{ project.name }}</option>
                                             {% endfor %}
@@ -84,7 +84,7 @@
                     </div>
                 </div>
                 <div class="search">
-                    <form method="get" id="search-form" action="#" style="width: inherit;">
+                    <form method="post" id="search-form" action="#" style="width: inherit;">
                         {% csrf_token %}
                         <input id="search-input" type="text" placeholder="Search" name="search" value="{{ name }}"/>
                         <button type="submit">
@@ -129,7 +129,7 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
     <script>
         $(document).ready(function () {
-            $('.js-example-basic-single').select2({
+            $('.js-example-basic-multiple').select2({
                 theme: "bootstrap"
             });
             $('#search-form').keyup(function (event) {

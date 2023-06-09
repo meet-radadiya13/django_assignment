@@ -4,7 +4,6 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
-from django.core.mail import send_mail
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import JsonResponse
@@ -12,24 +11,20 @@ from django.shortcuts import render, redirect
 from django.views.decorators.http import require_POST
 
 from authentication.models import User
-from django_assignment import settings
+from authentication.utils import send_registration_mail
 from project.models import Project
-
-
-def send_registration_mail(email, subject, message):
-    send_mail(
-        subject,
-        message,
-        settings.EMAIL_HOST_USER,
-        [email],
-        fail_silently=False,
-    )
 
 
 # Create your views here.
 def handler404(request, *args, **argv):
     response = render(request, "utils/404.html", {})
     response.status_code = 404
+    return response
+
+
+def handler401(request, *args, **argv):
+    response = render(request, "utils/404.html", {})
+    response.status_code = 401
     return response
 
 
@@ -56,8 +51,6 @@ def save_user(request):
 @require_POST
 def validate_user(request):
     if request.user.is_authenticated:
-        if not request.user.has_changed_password:
-            return render(request, "user/change_password.html", {})
         return redirect("home")
     if request.method == "POST":
         email = request.POST.get("email")
@@ -65,8 +58,6 @@ def validate_user(request):
         user = authenticate(email=email, password=password)
         if user is not None:
             login(request, user)
-            if not user.has_changed_password:
-                return render(request, "user/change_password.html", {})
             return redirect("home")
         else:
             messages.error(request, "Invalid username or password")
@@ -154,32 +145,37 @@ def add_company_users(request):
     email = request.POST.get('email')
     firstname = request.POST.get('firstname')
     lastname = request.POST.get('lastname')
-    if User.objects.filter(email=email).exists():
+    project = request.POST.getlist('projects')
+    if User.objects.filter(Q(email=email) & Q(is_active=True)).exists():
         messages.error(request, "User with given email already exists.")
         return redirect('view_users')
-    project = request.POST.get('projects')
-    username = email.split("@")[0]
-    password = User.objects.make_random_password()
-    print(password)
-    user = User.objects.create_user(
-        email=email,
-        password=password,
-        username=username
-    )
+    elif User.objects.filter(email=email).exists():
+        user = User.objects.get(email=email)
+        password = User.objects.make_random_password()
+        user.set_password(password)
+        user.has_changed_password = False
+        user.is_active = True
+        print(password)
+    else:
+        username = email.split("@")[0]
+        password = User.objects.make_random_password()
+        print(password)
+        user = User.objects.create_user(
+            email=email,
+            password=password,
+            username=username
+        )
     user.company = request.user.company
     user.firstname = firstname
     user.lastname = lastname
     user.save()
-    projects = Project.objects.get(id=project)
-    projects.assign.add(User.objects.get(email=user.email))
-    subject = "Welcome to " + str(user.company) + ", " + user.firstname + " !"
-    message = "We are glad to have you here! \n" \
-              "Your credentials are \nEmail: " \
-              + user.email + "\nPassword: " + password + "\n" + \
-              "You can login on \n" + request.build_absolute_uri('/')[:-1]
+    for project_id in project:
+        projects = Project.objects.get(id=project_id)
+        projects.assign.add(User.objects.get(email=user.email))
+    uri = request.build_absolute_uri('/')[:-1]
     email_process = Process(
         target=send_registration_mail,
-        args=(user.email, subject, message)
+        args=(user.email, password, user.firstname, str(user.company), uri)
     )
     email_process.start()
     return redirect('view_users')
@@ -194,7 +190,8 @@ def search_company_users(request):
     current_user = request.user
     company_users = User.objects.filter(
         Q(company=current_user.company) &
-        Q(is_owner=False)).exclude(is_superuser=True)
+        Q(is_owner=False) &
+        Q(is_active=True)).exclude(is_superuser=True)
     if query is not None:
         company_users = company_users.filter(
             Q(firstname__icontains=query) | Q(lastname__icontains=query))
@@ -221,8 +218,13 @@ def search_company_users(request):
     return JsonResponse(context, safe=False)
 
 
+@login_required
 def delete_user(request, user_id):
     user = User.objects.get(id=user_id)
+    projects = Project.objects.filter(is_deleted=False)
+    for project in projects:
+        if project.assign.filter(id=user.id).exists():
+            project.assign.remove(user)
     user.is_active = False
     user.save()
     return redirect("view_users")
