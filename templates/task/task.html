@@ -41,13 +41,14 @@ Tasks
                                 <label for="task_filter" style="margin-left:-130%;">Filter Using Project  : </label>
                                 <select id="task_filter" name="task_filter" style="margin-left:3%;">
                                     <option selected disabled=true> Select project</option>
-                                    <option value="all">All Projects</option>
                                     {% for project in projects %}
                                         <option value="{{ project.name }}">{{ project.name }}</option>
                                     {% endfor %}
                                 </select>
                              <input type="hidden" id="filter-url" data-url="{% url 'filter_tasks' %}">
                         </form>
+
+     
 
 
 
@@ -91,7 +92,7 @@ Tasks
             <i class="fa fa-bug"></i>
         </td>
 <!--        <td> {{ task.task_acronym }}</td>-->
-        <td>{{ task.task_acronym }}-{{ task.name }}</td>
+        <td>{{ task.task_acronym }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ task.name }}</td>
         <td> {{ task.project.name }}</td>
 
         {% if task.task_priority == "hi" %}
@@ -133,7 +134,7 @@ Tasks
             <i class="fa fa-tasks"></i>
         </td>
 <!--        <td> {{ task.task_acronym }}</td>-->
-        <td>{{ task.name }}</td>
+        <td>{{ task.task_acronym }} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ task.name }}</td>
         <td> {{ task.project.name }}</td>
 
         {% if task.task_priority == "hi" %}
@@ -255,6 +256,7 @@ Tasks
                 }
             },
             success: function (data) {
+                console.log(data)
                 $('#outer').empty()
                 $('#navbar').empty()
                 console.log(data.page_obj[0].task_type)
@@ -263,11 +265,12 @@ Tasks
                     let edit_task = $('#edit-url').attr('data-url');
                     let edit_url = edit_task.replace("1", data.page_obj[i].pk);
                     let status = ''
+                    let priority = ''
                     if (data.page_obj[i].task_status == "todo") {
                         status = '<td>\n' +
                             '         <button type="button" class="btn btn-outline-danger">To-Do</button>\n' +
                             '        </td>\n'
-                    } else if (data.page_obj[i].task_status == "in_progress") {
+                    } else if (data.page_obj[i].task_status == "in-progress") {
                         status = '<td>\n' +
                             '            <button type="button" class="btn btn-outline-primary">In Progress</button>\n' +
                             '        </td>\n'
@@ -277,15 +280,30 @@ Tasks
                             ' </td>\n'
                     }
 
+                    if(data.page_obj[i].task_priority == "hi"){
+                        priority = '<td>\n' +
+                            '            <button type="button" class="btn btn-outline-danger">High</button>\n' +
+                            '        </td>'
+                    }
+                    else if(data.page_obj[i].task_priority =="medium"){
+                        priority= ' <td>\n' +
+                            '            <button type="button" class="btn btn-outline-primary">Medium</button>\n' +
+                            '        </td>'
+                    }
+                    else{
+                        priority = '<td>\n' +
+                            '            <button type="button" class="btn btn-outline-success">Low</button>\n' +
+                            '        </td>'
+                    }
+
+
                     if (data.page_obj[i].task_type == "bug") {
                         res_data += '    <tr style="color: red" >\n' +
                             '        <td>\n' +
                             '            <i class="fa fa-bug"></i>\n' +
                             '        </td>\n' +
-                            '        <td>' + data.page_obj[i].task_acronym + '</td>\n' +
-                            '        <td>' + data.page_obj[i].name + '</td>\n' +
-                            '        <td>' + data.page_obj[i].project__name + '</td>\n' +
-                            '        <td>' + data.page_obj[i].task_priority + '</td>\n' + status +
+                            '        <td>' + data.page_obj[i].task_acronym +'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'+ data.page_obj[i].name + '</td>\n' +
+                            '        <td>' + data.page_obj[i].project__name + '</td>\n' + priority + status +
                             '<td><a href=' + edit_url + '><i class="fas fa-edit"></i></a></td>' +
                             '    </tr>\n'
                     } else {
@@ -293,10 +311,8 @@ Tasks
                             '        <td>\n' +
                             '            <i class="fa fa-bug"></i>\n' +
                             '        </td>\n' +
-                            '        <td>' + data.page_obj[i].task_acronym + '</td>\n' +
-                            '        <td>' + data.page_obj[i].name + '</td>\n' +
-                            '        <td>' + data.page_obj[i].project__name + '</td>\n' +
-                            '        <td>' + data.page_obj[i].task_priority + '</td>\n' + status +
+                            '        <td>' + data.page_obj[i].task_acronym + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + data.page_obj[i].name + '</td>\n' +
+                            '        <td>' + data.page_obj[i].project__name + '</td>\n' + priority + status +
                             '        <td>' + '<a href=' + edit_url + '>'+'<i class="fas fa-edit"></i></a></td>' +
                             '    </tr>\n'
                     }

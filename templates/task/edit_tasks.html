@@ -2,131 +2,230 @@
 {% load static %}
 
 {% block title %}
-    Edit tasks
+Change Password
 {% endblock title %}
 
 {% block styles %}
-    <link href="{% static 'css/add_project.css' %}" rel="stylesheet" type="text/css">
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+
+<link href="{% static 'css/edit_task.css' %}" rel="stylesheet" type="text/css">
+<!--<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>-->
+<!--<link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/1.2.0/tailwind.min.css" rel="stylesheet"/>-->
 {% endblock styles %}
 
 {% block body %}
-    <div class="row">
-        <div class="col-md-12">
-            <form action="{% url 'update_tasks' %}" method="post">
-            {% csrf_token %}
-            {% if tasks.created_by == request.user %}
-            <input type="hidden" name="task_id" value="{{ tasks.id }}">
-                <fieldset>
-                    <legend><span class="number">1</span> Your Task Info</legend>
+{% if messages %}
+<script>
+    {%
+        for message in messages %}
+    alert("{{ message }}");
+    {%
+        endfor %
+    }
+</script>
+{% endif %}
+<main class="main">
+    <div class="table-responsive responsive-wrapper">
+        <div class="change-password-modal">
+            <h2 class="modal-header">{{tasks.name }}</h2>
+            <section class="modal-body">
+                <form class="modal-form" action="{% url 'update_tasks' %}">
 
-                    <label for="taskname">Task Name:</label>
-                    <input type="text" id="taskname" name="task_name" value="{{ tasks.name }}">
+                    <div class="modal-form-group">
+                        <label for="attachments">Add Attachments: </label>
+                        <div class="field">
+                            <input type="file" id="files" name="files[]" accept=".doc,.docx,.ppt,.pdf,.txt,.jpg,.jpeg,.png" multiple/>
+                        </div>
+                    </div>
 
-                    <label for="acronym">Task Acronym:</label>
-                    <input type="text" id="acronym" name="task_acronym" value="{{ tasks.task_acronym }}" disabled>
 
-                     <label for="task-type">Task Type:</label>
-                        <select name="task-type" id="task-type">
-                            <option value="task">Task</option>
-                            <option value="bug">Bug</option>
-                        </select>
 
-                    <label for="related-project-name">Related project</label>
-                    <select id="related-project-name" name="related-project-name">
-                        {% for project in projects %}
-                            <option value="{{ project.id }}">{{ project.name }}</option>
-                        {% endfor %}
-                    </select>
+                    <div class="modal-form-group">
+                        <label for="description">Task Description: </label>
+                        <!--                        <input type="" name="password" placeholder="Task Description." id="description">-->
+                        <textarea id="description" name="description" placeholder="Task Description." rows="12" cols="42">{{tasks.description}}</textarea>
+                    </div>
 
-                    <label for="assignee">Task Assignee</label>
-                    <select id="assignee" name="assignee">
-                        <option value="{{request.user.id}}" selected> {{ request.user.username }}</option>
-                        {% for user in users %}
-                            <option value="{{ user.id }}">{{ user.username }}</option>
-                        {% endfor %}
-                    </select>
 
-                     <label for="task-status">Task Status:</label>
-                         <select name="task-status" id="task-status">
-                            <option value="todo" >To-Do</option>
-                            <option value="in-progress" >In-progress</option>
-                            <option value="completed">Completed</option>
+                    <div class="modal-form-group">
+                        <span class="modal-hlp-txt">Activities :</span>
+                    </div>
 
-                         </select>
 
-                     <label for="task-priority">Task Priority:</label>
-                            <select name="task-priority" id="task-priority">
-                                <option value="Low">Low</option>
-                                <option value="Medium">Medium</option>
-                                <option value="High">High</option>
+                </form>
+
+                <!--                Side Division -->
+
+                <div class="password-guidelines">
+                    <h3 class="guidelines-header">Details</h3>
+                    <form class="modal-form">
+                        <div class="modal-form-group">
+                            <label for="task-type">Task Type:</label>
+                            <select name="task-type" id="task-type">
+                                <option value="task">Task</option>
+                                <option value="bug">Bug</option>
+                            </select>
+                        </div>
+
+
+                        <div class="modal-form-group">
+                            <label for="related-project-name">Related project</label>
+                            <select id="related-project-name" name="related-project-name">
+                                {% for project in projects %}
+                                <option value="{{ project.id }}" {% if project.name == tasks.project.name %} selected {% endif %}>{{ project.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="modal-form-group">
+                            <label for="assignee">Task Assignee</label>
+                            <select id="assignee" name="assignee" disabled class="ignore-caret">
+                                <option value="{{request.user.id}}" selected> {{ request.user.username }}</option>
+                                {% for user in users %}
+                                <option value="{{ user.id }}">{{ user.username }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="modal-form-group">
+
+                            <label for="task-status">Task Status:</label>
+                            <select name="task-status" id="task-status">
+                                <option value="todo" {% if tasks.task_status == "todo" %} selected {% endif %}>To-Do</option>
+                                <option value="in_progress" {% if tasks.task_status == "in_progress" %} selected {% endif %}>In-progress</option>
+                                <option value="completed" {% if tasks.task_status == "completed" %} selected {% endif %}>Completed</option>
 
                             </select>
+                        </div>
 
-                </fieldset>
-
-                <button type="submit">Update Project</button>
-
-                {% else %}
-
-                        <input type="hidden" name="task_id" value="{{ tasks.id }}">
-                <fieldset>
-                    <legend><span class="number">1</span> Your Task Info</legend>
-
-                    <label for="taskname">Task Name:</label>
-                    <input type="text" id="taskname" name="task_name" value="{{ tasks.name }}" disabled>
-
-                    <label for="acronym">Task Acronym:</label>
-                    <input type="text" id="acronym" name="task_acronym" value="{{ tasks.task_acronym }}" disabled>
-
-                     <label for="task-type">Task Type:</label>
-                        <select name="task-type" id="task-type" disabled>
-                            <option value="task">Task</option>
-                            <option value="bug">Bug</option>
-                        </select>
-
-                    <label for="related-project-name">Related project</label>
-                    <select id="related-project-name" name="related-project-name" disabled>
-                        {% for project in projects %}
-                            <option value="{{ project.id }}">{{ project.name }}</option>
-                        {% endfor %}
-                    </select>
-
-                    <label for="assignee">Task Assignee</label>
-                    <select id="assignee" name="assignee" disabled>
-                        <option value="{{request.user.id}}" selected> {{ request.user.username }}</option>
-                        {% for user in users %}
-                            <option value="{{ user.id }}">{{ user.username }}</option>
-                        {% endfor %}
-                    </select>
-
-                     <label for="task-status">Task Status:</label>
-                         <select name="task-status" id="task-status">
-                            <option value="todo">To-Do</option>
-                            <option value="in-progress">In-progress</option>
-                            <option value="completed" >Completed</option>
-
-                         </select>
-
-                     <label for="task-priority">Task Priority:</label>
-                            <select name="task-priority" id="task-priority" disabled>
-                                <option value="Low">Low</option>
-                                <option value="Medium">Medium</option>
-                                <option value="High">High</option>
+                        <div class="modal-form-group">
+                            <label for="task-priority">Task Priority:</label>
+                            <select name="task-priority" id="task-priority" disabled  class="ignore-caret">
+                                <option value="low" {% if tasks.task_priority == "low" %} selected {% endif %}>Low</option>
+                                <option value="medium" {% if tasks.task_priority == "medium" %} selected {% endif %}>Medium</option>
+                                <option value="hi" {% if tasks.task_priority == "hi" %} selected {% endif %}>High</option>
 
                             </select>
-
-                </fieldset>
-
-                <button type="submit">Update Project</button>
+                        </div>
 
 
+                    </form>
 
-                {% endif %}
-            </form>
+                </div>
+            </section>
+            <div class="modal-footer">
+                <button class="modal-btn primary-btn" onclick="location.href='{% url 'view_tasks' 1 %}'">Close</button>
+                <button type="submit" class="modal-btn secondary-btn">Save Changes</button>
+            </div>
         </div>
     </div>
+</main>
 
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
-    <script type="text/javascript" src="{% static 'js/add_project.js' %}"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+<script type="text/javascript" src="{% static 'js/edit_task.js' %}"></script>
 {% endblock body %}
+
+<!--<main class="main">-->
+<!--        <div class="responsive-wrapper">-->
+<!--<br>-->
+<!--<br>-->
+<!--<br>-->
+<!--   <ul>-->
+<!--  <li><span class="14" style="font-weight: bolder;">14</span> To Do</li>-->
+<!--  <li><span class="4" style="font-weight: bolder;">4</span> In Progress</li>-->
+<!--  <li><span class="0" style="font-weight: bolder;">0</span> Code Review</li>-->
+<!--  <li><span class="8" style="font-weight: bolder;">8</span> Functional Review</li>-->
+<!--  <li><span class="6" style="font-weight: bolder;">6</span> Done</li>-->
+<!--  <li><span class="24" style="font-weight: bolder;">24</span> Ready for Release</li>-->
+<!--</ul>-->
+
+
+<!--  <div class="panel_board">-->
+
+<!--    <div style="top: 10px;position:relative;left:10px">Products /<a> LRN-7927</a></div>-->
+
+<!--<br>-->
+<!--<div style="position:relative;left: 10px; top: 70px;">Details</div>-->
+<!--&nbsp;-->
+<!--<div style="position:relative;border-top:2px solid #e8e8e8;width:590px;height:80px;-->
+<!--            top:60px;left: 10px"></div>-->
+
+
+<!--    <div class="container">-->
+<!--      <div class="left_internal_sub_contaianer">-->
+<!--      <div>Assignee:</div>-->
+<!--        <br>-->
+<!--      <div>Status:</div>-->
+<!--        <br>-->
+<!--      <div>Priority</div>-->
+<!--        <br>-->
+
+<!--      <div style="font-weight: bold; color:black;">People</div>-->
+
+<!--        <br>-->
+<!--      <div>Created by:</div>-->
+<!--        <br>-->
+<!--        <div>Updated by :</div>-->
+<!--<br>-->
+<!--      <div style="font-weight: bold; color: black;">Dates</div>-->
+<!--    <br>-->
+<!--      <div>Created at:</div>-->
+<!--        <br>-->
+
+<!--      <div>Updated at:</div>-->
+<!--      <div class="right_internal_sub-container">-->
+<!--      <div style="background:#4c004c; padding-bottom:1px;border-radius:5px;color:white; width:104px;height:18px;padding-left:2px">Client Support</div>-->
+<!--        <span class="glyphicon glyphicon-remove" style="color:white;position:relative;font-size:12px;left:-28px;top:3px;"></span>-->
+<!--        <br>-->
+<!--&lt;!&ndash;      <div style="border:1px solid #e5e52d; width: 115px;height:19px; border-radius:4px;padding-bottom:1px;">Functional Review</div>&ndash;&gt;-->
+<!--        <br>-->
+
+
+<!--        <br>-->
+<!--      <div style="position: relative;top:5px;">KKS04, </div>-->
+<!--&lt;!&ndash;        <div>jira_escalated, </div>&ndash;&gt;-->
+<!--&lt;!&ndash;        <div>jira_update, support</div>&ndash;&gt;-->
+<!--        <br>-->
+<!--        <div style="font-syle:italic;top:14px;position:relative">None</div>-->
+<!--        <br>-->
+<!--        <div style="position:relative;top:15px;">None</div>-->
+<!--        <br>-->
+<!--        <div style="position:relative;top:20px;margin-bottom:10px;">None</div>-->
+<!--        <br>-->
+<!--        <br>-->
+<!--        <br>-->
+
+<!--        <div style="position: relative;top:33px;"></div>-->
+<!--        <br>-->
+<!--        <br>-->
+<!--        <div style="position: relative;top:35px;"></div>-->
+<!--        <br>-->
+<!--        <br>-->
+<!--        <div style="position: relative;top:39px;"></div>-->
+<!--        <br>-->
+<!--        <br>-->
+<!--        <br>-->
+<!--        <br>-->
+<!--        <br>-->
+<!--        <div style="position: relative;top:69px;"></div>-->
+<!--        <br>-->
+<!--        <br>-->
+
+<!--        <br>-->
+<!--        <div style="position: relative"></div>-->
+
+<!--      </div>-->
+<!--    </div>-->
+<!--    </div>-->
+<!--</div>-->
+<!--        </div>-->
+<!--</main>-->
+
+<!--&lt;!&ndash;    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>&ndash;&gt;-->
+<!--        <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>-->
+<!--    <script type="text/javascript" src="{% static 'js/edit_task.js' %}"></script>-->
+
+
+
+
+
+

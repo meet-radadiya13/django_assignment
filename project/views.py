@@ -9,7 +9,7 @@ from django.shortcuts import render, redirect
 from django.views.decorators.http import require_POST
 
 from authentication.models import User
-from project.models import Project, Task
+from project.models import Project, Task, CommonModel
 
 
 # Create your views here.
@@ -185,12 +185,11 @@ def view_tasks(request, page_no=1):
     # return render(request, 'task/task.html', context)
 
     current_user = request.user
-    my_tasks = Task.objects.filter(Q(assign=current_user))
+    my_tasks = Task.objects.filter(Q(assign=current_user) & Q(is_deleted = False))
+
     projects = Project.objects.all()
 
     all_tasks = request.GET.get("task_filter")
-    if(all_tasks =="all"):
-        return redirect("view_tasks",page_no=1)
 
     context = {}
     context["projects"] = projects
@@ -230,17 +229,20 @@ def insert_tasks(request):
     task_assignee = request.POST.get('assignee')
     task_description = request.POST.get('task_desc')
     task_related_project = request.POST.get('related-project-name')
-    task_type = request.POST['task-type']
-    task_status = request.POST['task-status']
-    task_priority = request.POST['task-priority']
-    task = Task()
-    project_acronym = Project.objects.get(pk = task_related_project)
+    task_type = request.POST.get('task-type')
+    task_status = request.POST.get('task-status')
+    task_priority = request.POST.get('task-priority')
+
+    project_acronym = Project.objects.get(pk=task_related_project)
     task_acronym_partial = project_acronym.acronym
+    task_count = Task.objects.filter(project= task_related_project).exclude(is_deleted=True).count() +1
+    task_acronym_partial += "-"+ str(task_count)
+    task = Task()
 
     task.project = Project.objects.get(pk=task_related_project)
     task.assign = User.objects.get(pk=task_assignee)
-    task.name = task_name
     task.task_acronym = task_acronym_partial
+    task.name = task_name
     task.description = task_description
     task.created_by = request.user
     task.updated_by = request.user
@@ -249,7 +251,7 @@ def insert_tasks(request):
     task.task_type = task_type
     task.save()
 
-    return redirect("view_tasks")
+    return redirect("view_tasks",page_no=1)
 
 
 @login_required
@@ -270,7 +272,6 @@ def edit_tasks(request, task_id):
 @require_POST
 def update_tasks(request):
     task_id = request.POST.get("task_id")
-    acronym = request.POST.get("task_acronym")
     task_type = request.POST.get("task-type")
     task_name = request.POST.get("task_name")
     assignee = request.POST.get("assignee")
@@ -287,9 +288,7 @@ def update_tasks(request):
     task.task_status = task_status
     task.task_priority = task_priority
     task.task_type = task_type
-    task.assignee = assignee
     task.name = task_name
-    task.task_acronym = acronym
     task.updated_by = request.user
 
     # if completed:
@@ -309,7 +308,7 @@ def search_tasks(request):
     context = {}
     current_user = request.user
     tasks = Task.objects. \
-        filter(Q(assign=current_user)).values('pk', 'name', 'task_acronym',
+        filter(Q(assign=current_user) & Q(is_deleted = False)).values('pk', 'name', 'task_acronym',
                                               'task_type',
                                               'project__name',
                                               'task_priority',
@@ -347,14 +346,15 @@ def filter_tasks(request):
     context = {}
     current_user = request.user
     tasks = Task.objects. \
-        filter(Q(assign=current_user)).values('pk', 'name', 'task_acronym',
+        filter(assign=current_user).exclude(is_deleted= True).values('pk', 'name', 'task_acronym',
                                               'task_type',
                                               'project__name',
                                               'task_priority',
                                               'task_status',
                                               )
     if query is not None:
-        tasks = tasks.filter(Q(project__name=query))
+            tasks = tasks.filter(Q(project__name=query))
+
 
     paginator = Paginator(tasks, 10)
     page_obj = paginator.get_page(page_no)
