@@ -126,17 +126,35 @@ def edit_password(request):
 
 
 @login_required
-def view_company_users(request):
+def view_company_users(request, page_no):
     context = {}
     current_user = request.user
     company_users = User.objects.filter(
         Q(company=current_user.company) &
         Q(is_owner=False)).exclude(Q(is_superuser=True) |
                                    Q(is_active=False)).order_by(
-                                    'username', 'date_joined')
+        'username', 'date_joined')
     projects = Project.objects.filter(is_deleted=False)
     context["company_users"] = company_users
-    context["projects"] = projects
+    paginator = Paginator(company_users, 6)
+    page_obj = paginator.get_page(page_no)
+    context["ELLIPSIS"] = page_obj.paginator.ELLIPSIS
+    context["page_obj"] = page_obj.object_list
+    context["has_next"] = page_obj.has_next()
+    if context["has_next"]:
+        context["next_page_no"] = page_obj.next_page_number()
+    else:
+        context["next_page_no"] = 1
+    context["has_previous"] = page_obj.has_previous()
+    if context["has_previous"]:
+        context["previous_page_no"] = page_obj.previous_page_number()
+    else:
+        context["previous_page_no"] = 1
+    context["last_page"] = page_obj.paginator.num_pages
+    context["elided_pages"] = paginator.get_elided_page_range(
+        page_no, on_each_side=1, on_ends=2
+    )
+    context["current_page"] = page_obj.number
     return render(request, "company/company.html", context)
 
 

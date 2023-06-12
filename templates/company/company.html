@@ -104,7 +104,7 @@
                 </tr>
                 </thead>
                 <tbody id="table">
-                {% for user in company_users %}
+                {% for user in page_obj %}
                     <tr>
                         <td>{{ user.firstname }} {{ user.lastname }}</td>
                         <td>{{ user.email }}</td>
@@ -116,6 +116,47 @@
                 </tbody>
             </table>
         </div>
+        <nav aria-label="Page navigation example" id="navbar">
+            <ul class="pagination justify-content-center">
+                <li class="page-item">
+                    <a class="page-link" href="{% url 'view_users' 1 %}" tabindex="-1">&laquo; First</a>
+                </li>
+                {% if has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="{% url 'view_users' previous_page_no %}" tabindex="-1">&lt;
+                            Previous</a>
+                    </li>
+                {% endif %}
+                {% for page_number in elided_pages %}
+                    <script type="text/javascript">
+                    </script>
+                    {% if page_number == ELLIPSIS %}
+                        <li class="page-item">
+                            <span class="page-link">{{ ELLIPSIS }}</span>
+                        </li>
+                    {% else %}
+                        {% if page_number == current_page %}
+                            <li class="page-item">
+                                <a class="page-link hover"
+                                   href="{% url 'view_users' page_number %}">{{ page_number }}</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item">
+                                <a class="page-link" href="{% url 'view_users' page_number %}">{{ page_number }}</a>
+                            </li>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+                {% if has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{% url 'view_users' next_page_no %}">Next &gt;</a>
+                    </li>
+                {% endif %}
+                <li class="page-item">
+                    <a class="page-link" href="{% url 'view_users' last_page %}" tabindex="-1">Last &raquo;</a>
+                </li>
+            </ul>
+        </nav>
     </main>
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
             integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
@@ -153,6 +194,7 @@
                 },
                 success: function (data) {
                     $('#table').empty()
+                    $('#navbar').empty();
                     let res_data = '';
                     for (var i = 0; i < data.page_obj.length; i++) {
                         let delete_id = $('#delete-url').attr('data-url');
@@ -162,14 +204,42 @@
                             '<td>' + data.page_obj[i].email + '</td>' +
                             '<td>' + data.page_obj[i].raw_phone + '</td>' +
                             '<td>' + change_date_js(data.page_obj[i].date_joined) + '</td>' +
-                            '<td><a href='+ delete_url+ '><i class="ph ph-trash"></i></a></td>' +
+                            '<td><a href=' + delete_url + '><i class="ph ph-trash"></i></a></td>' +
                             '</tr>'
                     }
                     $('#table').html(res_data)
+                    let next = '';
+                    let previous = '';
+                    if (data.has_previous) {
+                        previous = '<li class="page-item">' +
+                            '<a class="page-link paginator" href="#" page_no=' + data.previous_page_no + ' tabindex="-1">&lt;Previous</a>' +
+                            '</li>'
+                    }
+                    if (data.has_next) {
+                        next = '<li class="page-item">' +
+                            '<a id="next" class="page-link paginator" href="#" page_no=' + data.next_page_no + '>Next &gt;</a>' +
+                            '</li>'
+                    }
+                    nav = '<ul class="pagination justify-content-center">' +
+                        '<li class="page-item">' +
+                        '<a class="page-link paginator" href="#" page_no=1 tabindex="-1">&laquo; First</a>' +
+                        '</li>' +
+                        previous +
+                        '<li class="page-item"><a class="page-link paginator" href="#" page_no=' + data.current_page + '>' + data.current_page + '</a></li>' +
+                        next +
+                        '<li class="page-item">' +
+                        '<a class="page-link paginator" href="#" page_no=' + data.last_page + ' tabindex="-1">Last &raquo;</a>' +
+                        '</li>' +
+                        '</ul>'
+                    $('#navbar').html(nav)
                 },
                 complete: function () {
                     current_request = null;
                 }
+            });
+
+            $(document).on('click', '.paginator', function () {
+                get_projects($(this).attr('page_no'))
             });
 
             function change_date_js(dateString) {

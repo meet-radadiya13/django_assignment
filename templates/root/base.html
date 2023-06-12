@@ -28,7 +28,7 @@
                 <a href="{% url 'view_projects' 1 %}"> Projects </a>
                 <a href="#"> My Tasks </a>
                 {% if request.user.is_owner %}
-                <a href="{% url 'view_users' %}"> Users </a>
+                <a href="{% url 'view_users' 1 %}"> Users </a>
                 {% endif %}
             </nav>
             <div class="header-navigation-actions">
