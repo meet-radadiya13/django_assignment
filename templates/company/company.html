@@ -26,7 +26,6 @@
     <script>
         function change_date(dateString) {
             const date = moment(dateString, 'MMM DD, YYYY, hh:mm a');
-            console.log(date);
             const localDate = date.toLocaleString('en-US', {
                 timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                 hour12: true
