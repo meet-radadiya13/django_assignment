@@ -1,0 +1,38 @@
+thead {
+    color: #404089;
+}
+
+td:hover {
+    color: #434ce8;
+}
+
+table {
+    margin-top: 5%;
+}
+
+.submit {
+    background-color: #404089;
+}
+
+.submit:hover {
+    background-color: #434ce8;
+}
+
+.close {
+    border: none;
+    background: #FFFFFF;
+}
+
+.page-link {
+    color: #404089;
+}
+
+.page-link:hover {
+    color: #434ce8;
+}
+
+.hover {
+    background-color: #434ce8;
+    color: #FFFFFF;
+    border: 1px solid #dee2e6;
+}

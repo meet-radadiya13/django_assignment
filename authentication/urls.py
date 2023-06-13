@@ -33,4 +33,17 @@ urlpatterns = [
         LogoutView.as_view(next_page=settings.LOGOUT_REDIRECT_URL),
         name="logout",
     ),
+    path(
+        "view_users/<int:page_no>/",
+        views.view_company_users,
+        name="view_users"
+    ),
+    path("add_company_users/", views.add_company_users, name="add_users"),
+    path(
+        "search_company_users/",
+        views.search_company_users,
+        name="search_users"
+    ),
+    path("delete_users/<int:user_id>",
+         views.delete_user, name="delete_user"),
 ]
