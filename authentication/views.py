@@ -32,6 +32,12 @@ def handler401(request, *args, **argv):
 
 @require_POST
 def save_user(request):
+    logging.info(
+        f'[Request Method: {request.method}, '
+        f'Function Name: {__name__}, '
+        f'User ID: {request.user.id}, '
+        f'Data: {request.GET if request.method == "GET" else request.POST}, '
+        f'URI: {request.build_absolute_uri()}]')
     form_user = request.POST
     name = form_user.get("name")
     email = form_user.get("email")
@@ -53,6 +59,12 @@ def save_user(request):
 
 @require_POST
 def validate_user(request):
+    logging.info(
+        f'[Request Method: {request.method}, '
+        f'Function Name: {__name__}, '
+        f'User ID: {request.user.id}, '
+        f'Data: {request.GET if request.method == "GET" else request.POST}, '
+        f'URI: {request.build_absolute_uri()}]')
     if request.user.is_authenticated:
         return redirect("home")
     current_user = request.POST
@@ -70,6 +82,12 @@ def validate_user(request):
 @require_POST
 @login_required
 def edit_user(request):
+    logging.info(
+        f'[Request Method: {request.method}, '
+        f'Function Name: {__name__}, '
+        f'User ID: {request.user.id}, '
+        f'Data: {request.GET if request.method == "GET" else request.POST}, '
+        f'URI: {request.build_absolute_uri()}]')
     form_user = request.POST
     user_id = form_user.get("user_id")
     username = form_user.get("username")
@@ -98,6 +116,12 @@ def edit_user(request):
 @require_POST
 @login_required
 def edit_password(request):
+    logging.info(
+        f'[Request Method: {request.method}, '
+        f'Function Name: {__name__}, '
+        f'User ID: {request.user.id}, '
+        f'Data: {request.GET if request.method == "GET" else request.POST}, '
+        f'URI: {request.build_absolute_uri()}]')
     form_user = request.POST
     user_id = form_user.get("user_id_reset")
     current_password = form_user.get("current_password")
@@ -127,7 +151,12 @@ def edit_password(request):
 @require_GET
 @login_required
 def view_company_users(request, page_no):
-    logging.info(f'Viewing company users {request.GET}')
+    logging.info(
+        f'[Request Method: {request.method}, '
+        f'Function Name: {__name__}, '
+        f'User ID: {request.user.id}, '
+        f'Data: {request.GET if request.method == "GET" else request.POST}, '
+        f'URI: {request.build_absolute_uri()}]')
     context = {}
     current_user = request.user
     company_users = User.objects.filter(
@@ -166,6 +195,12 @@ def view_company_users(request, page_no):
 @require_POST
 @login_required
 def add_company_users(request):
+    logging.info(
+        f'[Request Method: {request.method}, '
+        f'Function Name: {__name__}, '
+        f'User ID: {request.user.id}, '
+        f'Data: {request.GET if request.method == "GET" else request.POST}, '
+        f'URI: {request.build_absolute_uri()}]')
     response = redirect('view_users', page_no=1)
     email = request.POST.get('email')
     if email is not None:
@@ -210,7 +245,14 @@ def add_company_users(request):
     return response
 
 
+@require_GET
 def search_company_users(request):
+    logging.info(
+        f'[Request Method: {request.method}, '
+        f'Function Name: {__name__}, '
+        f'User ID: {request.user.id}, '
+        f'Data: {request.GET if request.method == "GET" else request.POST}, '
+        f'URI: {request.build_absolute_uri()}]')
     query = request.GET.get('query')
     page_no = request.GET.get("page_no")
     if page_no == "undefined":
@@ -248,8 +290,15 @@ def search_company_users(request):
     return JsonResponse(context, safe=False)
 
 
+@require_GET
 @login_required
 def delete_user(request, user_id):
+    logging.info(
+        f'[Request Method: {request.method}, '
+        f'Function Name: {__name__}, '
+        f'User ID: {request.user.id}, '
+        f'Data: {request.GET if request.method == "GET" else request.POST}, '
+        f'URI: {request.build_absolute_uri()}]')
     user = User.objects.get(id=user_id)
     projects = Project.objects.filter(is_deleted=False)
     for project in projects:
