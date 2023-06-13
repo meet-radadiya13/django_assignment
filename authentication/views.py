@@ -1,3 +1,5 @@
+import datetime
+import logging
 from multiprocessing import Process
 
 from django.contrib import messages
@@ -8,7 +10,7 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_GET
 
 from authentication.models import User
 from authentication.utils import send_registration_mail
@@ -30,10 +32,11 @@ def handler401(request, *args, **argv):
 
 @require_POST
 def save_user(request):
-    name = request.POST.get("name")
-    email = request.POST.get("email")
-    password1 = request.POST.get("password1")
-    password2 = request.POST.get("password2")
+    form_user = request.POST
+    name = form_user.get("name")
+    email = form_user.get("email")
+    password1 = form_user.get("password1")
+    password2 = form_user.get("password2")
     if password1 == password2:
         User = get_user_model()
         user = User.objects.create_user(
@@ -52,58 +55,54 @@ def save_user(request):
 def validate_user(request):
     if request.user.is_authenticated:
         return redirect("home")
-    if request.method == "POST":
-        email = request.POST.get("email")
-        password = request.POST.get("password")
-        user = authenticate(email=email, password=password)
-        if user is not None:
-            login(request, user)
-            return redirect("home")
-        else:
-            messages.error(request, "Invalid username or password")
-        return render(request, "user/login.html", {})
-
-
-@login_required
-@require_POST
-def edit_user(request):
-    user_id = request.POST.get("user_id")
-    username = request.POST.get("username")
-    firstname, lastname = request.POST.get("fullname").split()
-    profile_picture = request.FILES.get("profile_picture")
-    remove_profile = request.POST.get("remove_profile")
-    about = request.POST.get("about")
-    contact_no = request.POST.get("contact_no")
-    user = User()
-    current_user = User.objects.get(id=user_id)
-    user.id = user_id
-    user.username = username
-    user.password = current_user.password
-    user.date_joined = current_user.date_joined
-    user.email = current_user.email
-    user.firstname = firstname
-    user.lastname = lastname
-
-    if remove_profile == "on":
-        user.image = "profiles/default.png"
-    elif profile_picture is None:
-        user.image = current_user.image
+    current_user = request.POST
+    email = current_user.get("email")
+    password = current_user.get("password")
+    user = authenticate(email=email, password=password)
+    if user is not None:
+        login(request, user)
+        return redirect("home")
     else:
-        user.image = profile_picture
+        messages.error(request, "Invalid username or password")
+    return render(request, "user/login.html", {})
 
-    user.about = about
-    user.contact_no = contact_no
-    user.save()
+
+@require_POST
+@login_required
+def edit_user(request):
+    form_user = request.POST
+    user_id = form_user.get("user_id")
+    username = form_user.get("username")
+    firstname, lastname = form_user.get("fullname").split()
+    profile_picture = request.FILES.get("profile_picture")
+    remove_profile = form_user.get("remove_profile")
+    about = form_user.get("about")
+    contact_no = form_user.get("contact_no")
+    current_user = User.objects.get(id=user_id)
+    current_user.id = user_id
+    current_user.username = username
+    current_user.firstname = firstname
+    current_user.lastname = lastname
+    if remove_profile == "on":
+        current_user.image = "profiles/default.png"
+    elif profile_picture is None:
+        current_user.image = current_user.image
+    else:
+        current_user.image = profile_picture
+    current_user.about = about
+    current_user.contact_no = contact_no
+    current_user.save()
     return redirect("profile")
 
 
-@login_required
 @require_POST
+@login_required
 def edit_password(request):
-    user_id = request.POST.get("user_id_reset")
-    current_password = request.POST.get("current_password")
-    new_password = request.POST.get("new_password")
-    new_password_again = request.POST.get("new_password_again")
+    form_user = request.POST
+    user_id = form_user.get("user_id_reset")
+    current_password = form_user.get("current_password")
+    new_password = form_user.get("new_password")
+    new_password_again = form_user.get("new_password_again")
     current_user = User.objects.get(id=user_id)
     if current_password is None:
         current_user.set_password(new_password)
@@ -125,17 +124,23 @@ def edit_password(request):
     return redirect("profile")
 
 
+@require_GET
 @login_required
 def view_company_users(request, page_no):
+    logging.info(f'Viewing company users {request.GET}')
     context = {}
     current_user = request.user
     company_users = User.objects.filter(
         Q(company=current_user.company) &
         Q(is_owner=False)).exclude(Q(is_superuser=True) |
-                                   Q(is_active=False)).order_by(
+                                   Q(is_active=False) |
+                                   Q(company=None)).order_by(
         'username', 'date_joined')
-    projects = Project.objects.filter(is_deleted=False)
-    context["company_users"] = company_users
+    projects = Project.objects.filter(
+        Q(is_deleted=False) &
+        Q(created_by__company=current_user.company)
+    )
+    context["projects"] = projects
     paginator = Paginator(company_users, 6)
     page_obj = paginator.get_page(page_no)
     context["ELLIPSIS"] = page_obj.paginator.ELLIPSIS
@@ -161,24 +166,29 @@ def view_company_users(request, page_no):
 @require_POST
 @login_required
 def add_company_users(request):
+    response = redirect('view_users', page_no=1)
     email = request.POST.get('email')
+    if email is not None:
+        email = email.lower()
+    else:
+        messages.error(request, "Please enter your email address")
+        return response
     firstname = request.POST.get('firstname')
     lastname = request.POST.get('lastname')
     project = request.POST.getlist('projects')
-    if User.objects.filter(Q(email=email) & Q(is_active=True)).exists():
+    user = User.objects.filter(email=email).first()
+    if user is not None and user.is_active:
         messages.error(request, "User with given email already exists.")
-        return redirect('view_users')
-    elif User.objects.filter(email=email).exists():
-        user = User.objects.get(email=email)
+        return response
+    elif user is not None:
         password = User.objects.make_random_password()
         user.set_password(password)
         user.has_changed_password = False
         user.is_active = True
-        print(password)
+        user.date_joined = datetime.datetime.now()
     else:
         username = email.split("@")[0]
         password = User.objects.make_random_password()
-        print(password)
         user = User.objects.create_user(
             email=email,
             password=password,
@@ -197,7 +207,7 @@ def add_company_users(request):
         args=(user.email, password, user.firstname, str(user.company), uri)
     )
     email_process.start()
-    return redirect('view_users')
+    return response
 
 
 def search_company_users(request):
@@ -247,4 +257,4 @@ def delete_user(request, user_id):
             project.assign.remove(user)
     user.is_active = False
     user.save()
-    return redirect("view_users")
+    return redirect("view_users", page_no=1)

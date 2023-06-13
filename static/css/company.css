@@ -22,3 +22,17 @@ table {
     border: none;
     background: #FFFFFF;
 }
+
+.page-link {
+    color: #404089;
+}
+
+.page-link:hover {
+    color: #434ce8;
+}
+
+.hover {
+    background-color: #434ce8;
+    color: #FFFFFF;
+    border: 1px solid #dee2e6;
+}
