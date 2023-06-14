@@ -7,14 +7,14 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Count, Case, When
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.views.decorators.http import require_POST, require_GET
 
 from authentication.models import User
 from authentication.utils import send_registration_mail
-from project.models import Project
+from project.models import Project, Task
 
 
 # Create your views here.
@@ -28,6 +28,81 @@ def handler401(request, *args, **argv):
     response = render(request, "utils/404.html", {})
     response.status_code = 401
     return response
+
+
+@require_GET
+@login_required
+def render_home(request):
+    if request.user.is_owner:
+        context = {}
+        context['total_projects'] = Project.objects.filter(
+            Q(is_deleted=False) &
+            Q(created_by__company=request.user.company)
+        ).count()
+        context['total_tasks'] = Task.objects.filter(
+            Q(is_deleted=False) &
+            Q(created_by__company=request.user.company)
+        ).count()
+        context['total_users'] = User.objects.filter(
+            Q(is_active=True) &
+            Q(company=request.user.company)
+        ).count()
+        context['latest_projects'] = Project.objects.filter(
+            Q(is_deleted=False) &
+            Q(created_by__company=request.user.company)).annotate(
+            num_tasks=Count('task')).order_by(
+            '-num_tasks', '-created_at')[:5].annotate(
+            task_high=Count(Case(When(task__task_priority='hi', then=1))),
+            task_medium=Count(Case(When(task__task_priority='medium', then=1))),
+            task_low=Count(Case(When(task__task_priority='low', then=1)))
+        )
+        context['latest_tasks'] = Task.objects.filter(
+            Q(is_deleted=False) &
+            Q(created_by__company=request.user.company)
+        ).order_by('-created_at')[
+                                  :5]
+        context['latest_users'] = User.objects.filter(
+            Q(is_active=True) &
+            Q(company=request.user.company)
+        ).order_by('-date_joined')[:5]
+    else:
+        context = {}
+        context['total_projects'] = Project.objects.filter(
+            Q(is_deleted=False) &
+            (Q(created_by=request.user) |
+             Q(assign=request.user))
+        ).count()
+        context['total_tasks'] = Task.objects.filter(
+            Q(is_deleted=False) &
+            (Q(created_by=request.user) |
+             Q(assign=request.user))
+        ).count()
+        context['total_users'] = User.objects.filter(
+            Q(is_active=True) &
+            Q(company=request.user.company)
+        ).count()
+        context['latest_projects'] = Project.objects.filter(
+            Q(is_deleted=False) &
+            (Q(created_by=request.user) |
+             Q(assign=request.user))).annotate(
+            num_tasks=Count('task')).order_by(
+            '-num_tasks', '-created_at')[:5].annotate(
+            task_high=Count(Case(When(task__task_priority='hi', then=1))),
+            task_medium=Count(Case(When(task__task_priority='medium', then=1))),
+            task_low=Count(Case(When(task__task_priority='low', then=1)))
+        )
+        context['latest_tasks'] = Task.objects.filter(
+            Q(is_deleted=False) &
+            (Q(created_by=request.user) |
+             Q(assign=request.user))
+        ).order_by('-created_at')[
+                                  :5]
+        context['latest_users'] = User.objects.filter(
+            Q(is_active=True) &
+            Q(company=request.user.company)
+        ).order_by('-date_joined')[:5]
+
+    return render(request, 'root/home.html', context)
 
 
 @require_POST
@@ -157,39 +232,42 @@ def view_company_users(request, page_no):
         f'User ID: {request.user.id}, '
         f'Data: {request.GET if request.method == "GET" else request.POST}, '
         f'URI: {request.build_absolute_uri()}]')
-    context = {}
-    current_user = request.user
-    company_users = User.objects.filter(
-        Q(company=current_user.company) &
-        Q(is_owner=False)).exclude(Q(is_superuser=True) |
-                                   Q(is_active=False) |
-                                   Q(company=None)).order_by(
-        'username', 'date_joined')
-    projects = Project.objects.filter(
-        Q(is_deleted=False) &
-        Q(created_by__company=current_user.company)
-    )
-    context["projects"] = projects
-    paginator = Paginator(company_users, 6)
-    page_obj = paginator.get_page(page_no)
-    context["ELLIPSIS"] = page_obj.paginator.ELLIPSIS
-    context["page_obj"] = page_obj.object_list
-    context["has_next"] = page_obj.has_next()
-    if context["has_next"]:
-        context["next_page_no"] = page_obj.next_page_number()
+    if request.user.is_owner:
+        context = {}
+        current_user = request.user
+        company_users = User.objects.filter(
+            Q(company=current_user.company) &
+            Q(is_owner=False)).exclude(Q(is_superuser=True) |
+                                       Q(is_active=False) |
+                                       Q(company=None)).order_by(
+            'username', 'date_joined')
+        projects = Project.objects.filter(
+            Q(is_deleted=False) &
+            Q(created_by__company=current_user.company)
+        )
+        context["projects"] = projects
+        paginator = Paginator(company_users, 6)
+        page_obj = paginator.get_page(page_no)
+        context["ELLIPSIS"] = page_obj.paginator.ELLIPSIS
+        context["page_obj"] = page_obj.object_list
+        context["has_next"] = page_obj.has_next()
+        if context["has_next"]:
+            context["next_page_no"] = page_obj.next_page_number()
+        else:
+            context["next_page_no"] = 1
+        context["has_previous"] = page_obj.has_previous()
+        if context["has_previous"]:
+            context["previous_page_no"] = page_obj.previous_page_number()
+        else:
+            context["previous_page_no"] = 1
+        context["last_page"] = page_obj.paginator.num_pages
+        context["elided_pages"] = paginator.get_elided_page_range(
+            page_no, on_each_side=1, on_ends=2
+        )
+        context["current_page"] = page_obj.number
+        return render(request, "company/company.html", context)
     else:
-        context["next_page_no"] = 1
-    context["has_previous"] = page_obj.has_previous()
-    if context["has_previous"]:
-        context["previous_page_no"] = page_obj.previous_page_number()
-    else:
-        context["previous_page_no"] = 1
-    context["last_page"] = page_obj.paginator.num_pages
-    context["elided_pages"] = paginator.get_elided_page_range(
-        page_no, on_each_side=1, on_ends=2
-    )
-    context["current_page"] = page_obj.number
-    return render(request, "company/company.html", context)
+        return redirect('home')
 
 
 @require_POST

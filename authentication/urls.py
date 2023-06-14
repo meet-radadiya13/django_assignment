@@ -9,7 +9,7 @@ from authentication import views
 urlpatterns = [
     path(
         "",
-        login_required(TemplateView.as_view(template_name="root/home.html")),
+        views.render_home,
         name="home",
     ),
     path(
