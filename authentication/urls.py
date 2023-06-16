@@ -9,7 +9,7 @@ from authentication import views
 urlpatterns = [
     path(
         "",
-        login_required(TemplateView.as_view(template_name="root/home.html")),
+        views.render_home,
         name="home",
     ),
     path(
@@ -46,4 +46,6 @@ urlpatterns = [
     ),
     path("delete_users/<int:user_id>",
          views.delete_user, name="delete_user"),
+    path("create_password/",
+         views.create_password, name="create_password"),
 ]
