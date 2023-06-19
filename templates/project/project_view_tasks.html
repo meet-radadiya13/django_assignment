@@ -55,7 +55,7 @@
                         {% else %}
                             <td><i class="fa-solid fa-list-check" style="color: #3cb043;"></i></td>
                         {% endif %}
-                        <td>{{ task.task_acronym }} | {{ task.name }}</td>
+                        <td><a href="#" class="task-name">{{ task.task_acronym }} | {{ task.name }}</a></td>
                         {% if task.task_priority == "hi" %}
                             <td><button type="button" class="btn btn-outline-danger">High</button></td>
                         {% elif task.task_priority == "medium" %}
