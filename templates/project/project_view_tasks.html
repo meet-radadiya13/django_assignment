@@ -75,46 +75,5 @@
                 </tbody>
             </table>
         </div>
-        {#        <nav aria-label="Page navigation example" id="navbar">#}
-        {#            <ul class="pagination justify-content-center">#}
-        {#                <li class="page-item">#}
-        {#                    <a class="page-link" href="{% url 'view_users' 1 %}" tabindex="-1">&laquo; First</a>#}
-        {#                </li>#}
-        {#                {% if has_previous %}#}
-        {#                    <li class="page-item">#}
-        {#                        <a class="page-link" href="{% url 'view_users' previous_page_no %}" tabindex="-1">&lt;#}
-        {#                            Previous</a>#}
-        {#                    </li>#}
-        {#                {% endif %}#}
-        {#                {% for page_number in elided_pages %}#}
-        {#                    <script type="text/javascript">#}
-        {#                    </script>#}
-        {#                    {% if page_number == ELLIPSIS %}#}
-        {#                        <li class="page-item">#}
-        {#                            <span class="page-link">{{ ELLIPSIS }}</span>#}
-        {#                        </li>#}
-        {#                    {% else %}#}
-        {#                        {% if page_number == current_page %}#}
-        {#                            <li class="page-item">#}
-        {#                                <a class="page-link hover"#}
-        {#                                   href="{% url 'view_users' page_number %}">{{ page_number }}</a>#}
-        {#                            </li>#}
-        {#                        {% else %}#}
-        {#                            <li class="page-item">#}
-        {#                                <a class="page-link" href="{% url 'view_users' page_number %}">{{ page_number }}</a>#}
-        {#                            </li>#}
-        {#                        {% endif %}#}
-        {#                    {% endif %}#}
-        {#                {% endfor %}#}
-        {#                {% if has_next %}#}
-        {#                    <li class="page-item">#}
-        {#                        <a class="page-link" href="{% url 'view_users' next_page_no %}">Next &gt;</a>#}
-        {#                    </li>#}
-        {#                {% endif %}#}
-        {#                <li class="page-item">#}
-        {#                    <a class="page-link" href="{% url 'view_users' last_page %}" tabindex="-1">Last &raquo;</a>#}
-        {#                </li>#}
-        {#            </ul>#}
-        {#        </nav>#}
     </main>
 {% endblock body %}

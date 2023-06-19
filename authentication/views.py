@@ -217,7 +217,7 @@ def view_company_users(request, page_no):
         f'[Request Method: {request.method}, '
         f'View Name: {__name__}, '
         f'User ID: {request.user.id}, '
-        f'Data: {request.GET if request.method == "GET" else request.POST}, '
+        f'Data: {request.GET}, '
         f'URI: {request.build_absolute_uri()}]')
     if request.user.is_owner:
         context = {}
