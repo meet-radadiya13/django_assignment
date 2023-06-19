@@ -15,4 +15,5 @@ urlpatterns = [
     ),
     path("update_projects/", views.update_projects, name="update_projects"),
     path("search_projects/", views.search_projects, name="search_projects"),
+    path("view_project_tasks/", views.view_project_tasks, name="view_project_tasks"),
 ]

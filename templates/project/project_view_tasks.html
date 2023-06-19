@@ -1,0 +1,120 @@
+{% extends 'root/base.html' %}
+{% load static %}
+
+{% block title %}
+    Company
+{% endblock title %}
+
+{% block styles %}
+    <link href="{% static 'css/company.css' %}" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+{% endblock styles %}
+
+{% block body %}
+    {% if messages %}
+        <script>
+            {% for message in messages %}
+                alert("{{ message }}");
+            {% endfor %}
+        </script>
+    {% endif %}
+    <main class="main">
+        <div class="table-responsive responsive-wrapper">
+            <div class="main-header">
+                <input type="hidden" id="delete-url" data-url="{% url 'delete_user' 1 %}">
+                <a href="#" class="button">
+                    <i class="ph-plus-bold"></i>
+                    <span>Add Tasks</span>
+                </a>
+                <div class="search">
+                    <form method="post" id="search-form" action="#" style="width: inherit;">
+                        {% csrf_token %}
+                        <input id="search-input" type="text" placeholder="Search" name="search" value="{{ name }}"/>
+                        <button type="submit">
+                            <i class="ph-magnifying-glass-bold"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <table class="table table-hover">
+                <thead>
+                <tr>
+                    <th scope="col"></th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Priority</th>
+                    <th scope="col">Status</th>
+                </tr>
+                </thead>
+                <tbody id="table">
+                {% for task in tasks %}
+                    <tr>
+                        {% if task.task_type == "bug" %}
+                            <td><i class="fa-solid fa-bug" style="color: #ff0000;"></i></td>
+                        {% else %}
+                            <td><i class="fa-solid fa-list-check" style="color: #3cb043;"></i></td>
+                        {% endif %}
+                        <td>{{ task.task_acronym }} | {{ task.name }}</td>
+                        {% if task.task_priority == "hi" %}
+                            <td><button type="button" class="btn btn-outline-danger">High</button></td>
+                        {% elif task.task_priority == "medium" %}
+                            <td><button type="button" class="btn btn-outline-warning">Medium</button></td>
+                        {% else %}
+                            <td><button type="button" class="btn btn-outline-success">Low</button></td>
+                        {% endif %}
+                        {% if task.task_status == "todo" %}
+                            <td><button type="button" class="btn btn-outline-danger">TODO</button></td>
+                        {% elif task.task_status == "in_progress" %}
+                            <td><button type="button" class="btn btn-outline-warning">In Progress</button></td>
+                        {% else %}
+                            <td><button type="button" class="btn btn-outline-success">Completed</button></td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {#        <nav aria-label="Page navigation example" id="navbar">#}
+        {#            <ul class="pagination justify-content-center">#}
+        {#                <li class="page-item">#}
+        {#                    <a class="page-link" href="{% url 'view_users' 1 %}" tabindex="-1">&laquo; First</a>#}
+        {#                </li>#}
+        {#                {% if has_previous %}#}
+        {#                    <li class="page-item">#}
+        {#                        <a class="page-link" href="{% url 'view_users' previous_page_no %}" tabindex="-1">&lt;#}
+        {#                            Previous</a>#}
+        {#                    </li>#}
+        {#                {% endif %}#}
+        {#                {% for page_number in elided_pages %}#}
+        {#                    <script type="text/javascript">#}
+        {#                    </script>#}
+        {#                    {% if page_number == ELLIPSIS %}#}
+        {#                        <li class="page-item">#}
+        {#                            <span class="page-link">{{ ELLIPSIS }}</span>#}
+        {#                        </li>#}
+        {#                    {% else %}#}
+        {#                        {% if page_number == current_page %}#}
+        {#                            <li class="page-item">#}
+        {#                                <a class="page-link hover"#}
+        {#                                   href="{% url 'view_users' page_number %}">{{ page_number }}</a>#}
+        {#                            </li>#}
+        {#                        {% else %}#}
+        {#                            <li class="page-item">#}
+        {#                                <a class="page-link" href="{% url 'view_users' page_number %}">{{ page_number }}</a>#}
+        {#                            </li>#}
+        {#                        {% endif %}#}
+        {#                    {% endif %}#}
+        {#                {% endfor %}#}
+        {#                {% if has_next %}#}
+        {#                    <li class="page-item">#}
+        {#                        <a class="page-link" href="{% url 'view_users' next_page_no %}">Next &gt;</a>#}
+        {#                    </li>#}
+        {#                {% endif %}#}
+        {#                <li class="page-item">#}
+        {#                    <a class="page-link" href="{% url 'view_users' last_page %}" tabindex="-1">Last &raquo;</a>#}
+        {#                </li>#}
+        {#            </ul>#}
+        {#        </nav>#}
+    </main>
+{% endblock body %}

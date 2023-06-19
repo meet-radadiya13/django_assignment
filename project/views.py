@@ -6,10 +6,10 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_GET
 
 from authentication.models import User
-from project.models import Project
+from project.models import Project, Task
 
 
 # Create your views here.
@@ -175,3 +175,12 @@ def search_projects(request):
     context["last_page"] = page_obj.paginator.num_pages
     context["current_page"] = page_obj.number
     return JsonResponse(context, safe=False)
+
+
+@require_GET
+@login_required
+def view_project_tasks(request):
+    project_id = request.GET.get('project_id')
+    tasks = Task.objects.filter(project=project_id)
+    context = {'tasks': tasks}
+    return render(request, 'project/project_view_tasks.html', context)

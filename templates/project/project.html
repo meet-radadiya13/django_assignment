@@ -77,7 +77,7 @@
                     </ul>
                 </article>
                 <footer class="card-footer">
-                    <a class="footer-link">View Tasks</a>
+                    <a  href="{% url 'view_project_tasks' %}?project_id={{ project.id }}" class="footer-link">View Tasks</a>
                 </footer>
             </div>
         {% endfor %}
