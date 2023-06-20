@@ -15,5 +15,10 @@ urlpatterns = [
     ),
     path("update_projects/", views.update_projects, name="update_projects"),
     path("search_projects/", views.search_projects, name="search_projects"),
-    path("view_project_tasks/", views.view_project_tasks, name="view_project_tasks"),
+    path("view_project_tasks/", views.view_project_tasks,
+         name="view_project_tasks"),
+    path("project_filter_tasks/", views.project_filter_tasks,
+         name="project_filter_tasks"),
+    path("project_search_tasks/", views.project_search_tasks,
+         name="project_search_tasks"),
 ]

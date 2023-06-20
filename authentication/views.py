@@ -332,8 +332,8 @@ def search_company_users(request):
         company_users = User.objects.filter(
             Q(company=current_user.company) &
             Q(is_owner=False) &
-            Q(is_active=True)).exclude(is_superuser=True).order_by('username',
-                                                                   'date_joined')
+            Q(is_active=True)).exclude(is_superuser=True).\
+            order_by('username', 'date_joined')
         if query is not None:
             company_users = company_users.filter(
                 Q(firstname__icontains=query) | Q(lastname__icontains=query))
