@@ -309,7 +309,6 @@ def project_search_tasks(request):
     query = request.GET.get('query')
     project_id = request.GET.get('project_id')
     context = {}
-    print(project_id, query)
     if project_id is not None:
         tasks = Task.objects.filter(
             Q(project=project_id) &

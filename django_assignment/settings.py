@@ -25,6 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Application definition
 
 INSTALLED_APPS = [
+    'django_crontab',
     'phone_field',
     'related_admin',
     'django.contrib.admin',
@@ -138,6 +139,10 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
+
+CRONJOBS = [
+    ('0 0 1 */1 *', 'authentication.cron.my_cron_job')
+]
 
 
 # Default primary key field type
