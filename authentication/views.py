@@ -217,7 +217,7 @@ def view_company_users(request, page_no):
         f'[Request Method: {request.method}, '
         f'View Name: {__name__}, '
         f'User ID: {request.user.id}, '
-        f'Data: {request.GET if request.method == "GET" else request.POST}, '
+        f'Data: {request.GET}, '
         f'URI: {request.build_absolute_uri()}]')
     if request.user.is_owner:
         context = {}
@@ -332,8 +332,8 @@ def search_company_users(request):
         company_users = User.objects.filter(
             Q(company=current_user.company) &
             Q(is_owner=False) &
-            Q(is_active=True)).exclude(is_superuser=True).order_by('username',
-                                                                   'date_joined')
+            Q(is_active=True)).exclude(is_superuser=True).\
+            order_by('username', 'date_joined')
         if query is not None:
             company_users = company_users.filter(
                 Q(firstname__icontains=query) | Q(lastname__icontains=query))
