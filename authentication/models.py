@@ -49,6 +49,13 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
     is_owner = models.BooleanField(default=False)
     has_changed_password = models.BooleanField(default=False)
+    stripe_customer_id = models.CharField(
+        max_length=255, null=True, blank=True
+    )
+    stripe_subscription_id = models.CharField(
+        max_length=255, null=True,
+        blank=True
+    )
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username"]
@@ -57,3 +64,19 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.username
+
+
+class PaymentHistory(CommonModel):
+    company = models.ForeignKey(
+        Company, on_delete=models.SET_NULL,
+        null=True, blank=True
+    )
+    status = models.CharField(max_length=10, null=True, blank=True)
+    transaction_id = models.CharField(max_length=255, null=True, blank=True)
+    transaction_made_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL,
+        null=True, blank=True
+        )
+
+    def __str__(self):
+        return str(self.company)

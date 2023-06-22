@@ -48,6 +48,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'authentication.middleware.UserChangedPasswordMiddleware',
+    'authentication.middleware.SubscriptionMiddleware',
 ]
 
 ROOT_URLCONF = 'django_assignment.urls'
