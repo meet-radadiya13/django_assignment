@@ -2,12 +2,22 @@
 {% load static %}
 
 {% block title %}
-Change Password
+Edit Tasks
 {% endblock title %}
 
 {% block styles %}
 
 <link href="{% static 'css/edit_task.css' %}" rel="stylesheet" type="text/css">
+<link href="{% static 'css/jquery.fileuploader.min.css' %}" rel="stylesheet" type="text/css">
+<!--<link href="{% static 'css/font-fileuploader.css' %}" rel="stylesheet" type="text/css">-->
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/1.2.0/tailwind.min.css" rel="stylesheet" type="text/css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<!--<link href="dist/font/font-fileuploader.css" rel="stylesheet">-->
+<!--<link href="dist/jquery.fileuploader.min.css" rel="stylesheet">-->
+
+<!--<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">-->
+<!--<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.2/css/all.min.css" rel="stylesheet">-->
 <!--<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>-->
 <!--<link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/1.2.0/tailwind.min.css" rel="stylesheet"/>-->
 {% endblock styles %}
@@ -15,25 +25,79 @@ Change Password
 {% block body %}
 {% if messages %}
 <script>
-    {%
-        for message in messages %}
+    {% for message in messages %}
     alert("{{ message }}");
-    {%
-        endfor %
-    }
+    {% endfor %}
 </script>
 {% endif %}
-<main class="main">
-    <div class="table-responsive responsive-wrapper">
+
+
+
+{% if tasks.created_by == request.user %}
         <div class="change-password-modal">
+
+            <ul class="breadcrumbs">
+                <li style="color:white;"><a href="http://127.0.0.1:8000/">Home</a></li>
+                <li style="color:white;"><a href="{% url 'view_tasks' 1 %}">My Tasks</a></li>
+                <li>{{tasks.task_acronym}} : {{tasks.name}}</li>
+
+            </ul>
+
+
+            <br>
+            <br>
+
+
             <h2 class="modal-header">{{tasks.name }}</h2>
+
+    <hr style="width:65%; margin-top:-3%">
             <section class="modal-body">
-                <form class="modal-form" action="{% url 'update_tasks' %}">
+                <form class="modal-form" id="form-1" method="POST" action="{% url 'update_tasks' %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <input type="hidden" name="task_id" value="{{ tasks.id }}">
 
                     <div class="modal-form-group">
-                        <label for="attachments">Add Attachments: </label>
-                        <div class="field">
-                            <input type="file" id="files" name="files[]" accept=".doc,.docx,.ppt,.pdf,.txt,.jpg,.jpeg,.png" multiple/>
+
+                        <div class="wrapper">
+                            <div class="box">
+                                <div class="input-bx">
+                                    <h2 class="upload-area-title">Add attachments...</h2>
+<!--                                         <label for="upload" class="uploadlabel">-->
+<!--                                            <span> <i class="fa fa-cloud-upload"></i></span>-->
+<!--                                            <p> Click to Upload</p>-->
+<!--                                        </label>-->
+
+                                    <input type="file" id="upload" name="upload" accept=".doc,.docx,.pdf,.jpg,.jpeg,.png" multiple>
+
+                                </div>
+
+                                <table>
+                                    <tbody id="data_append">
+
+                                    </tbody>
+
+                                </table>
+                                <div>
+                                    <br>
+                                    <br>
+                                    <b><h1>Saved Attachments:</h1></b>
+                                    <hr>
+
+                                    <table>
+                                        {% for attachment in related_attachments %}
+                                        <tr class="table-row" id="table-row">
+                                        <td><a href="{{ attachment.document.url }}" target="_blank">{{ attachment.document_name }}</a></td>
+                                            <input type="hidden" name ="old_documents" value="{{ attachment.id }}">
+                                        <td style="padding:8px;"><a href="{{ attachment.document.url }}" download><i class="fa fa-download"></i></a></td>
+                                            <td style="padding:8px;" id="{{ tasks.id }}"><i class="fa fa-close"></i></td>
+
+                                        </tr>
+                                        {% endfor %}
+                                    </table>
+
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -41,47 +105,54 @@ Change Password
 
                     <div class="modal-form-group">
                         <label for="description">Task Description: </label>
-                        <!--                        <input type="" name="password" placeholder="Task Description." id="description">-->
-                        <textarea id="description" name="description" placeholder="Task Description." rows="12" cols="42">{{tasks.description}}</textarea>
+
+                        <textarea id="description" name="description" placeholder="Task Description." rows="7"
+                                  cols="75">{{tasks.description}}</textarea>
                     </div>
 
 
-                    <div class="modal-form-group">
-                        <span class="modal-hlp-txt">Activities :</span>
-                    </div>
 
 
-                </form>
 
-                <!--                Side Division -->
+<!--                                Side Division -->
 
-                <div class="password-guidelines">
+                <div class="password-guidelines" style="width:80%;">
                     <h3 class="guidelines-header">Details</h3>
-                    <form class="modal-form">
+                    <br>
+
+
+
                         <div class="modal-form-group">
                             <label for="task-type">Task Type:</label>
                             <select name="task-type" id="task-type">
-                                <option value="task">Task</option>
-                                <option value="bug">Bug</option>
+                                {% if tasks.task_type == "task" %}
+                                    <option value="task" selected> Task</option>
+                                    <option value="bug">Bug</option>
+                                {% else %}
+
+                                    <option value="task"> Task</option>
+                                    <option value="bug" selected>Bug</option>
+                                {% endif %}
                             </select>
                         </div>
 
 
                         <div class="modal-form-group">
                             <label for="related-project-name">Related project</label>
-                            <select id="related-project-name" name="related-project-name">
+                            <select id="related-project-name" name="related-project-name" readonly class="ignore-caret">
                                 {% for project in projects %}
-                                <option value="{{ project.id }}" {% if project.name == tasks.project.name %} selected {% endif %}>{{ project.name }}</option>
+                                <option value="{{ project.id }}" {% if project.name == tasks.project.name %} selected {% endif %}>{{ project.name }}
+                                </option>
                                 {% endfor %}
                             </select>
                         </div>
 
                         <div class="modal-form-group">
                             <label for="assignee">Task Assignee</label>
-                            <select id="assignee" name="assignee" disabled class="ignore-caret">
-                                <option value="{{request.user.id}}" selected> {{ request.user.username }}</option>
+                            <select id="assignee" name="assignee">
+
                                 {% for user in users %}
-                                <option value="{{ user.id }}">{{ user.username }}</option>
+                                <option value="{{ user.id }}" {% if user.username == tasks.assign.username %} selected {% endif %}>{{ user.username }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -99,7 +170,7 @@ Change Password
 
                         <div class="modal-form-group">
                             <label for="task-priority">Task Priority:</label>
-                            <select name="task-priority" id="task-priority" disabled  class="ignore-caret">
+                            <select name="task-priority" id="task-priority">
                                 <option value="low" {% if tasks.task_priority == "low" %} selected {% endif %}>Low</option>
                                 <option value="medium" {% if tasks.task_priority == "medium" %} selected {% endif %}>Medium</option>
                                 <option value="hi" {% if tasks.task_priority == "hi" %} selected {% endif %}>High</option>
@@ -108,121 +179,304 @@ Change Password
                         </div>
 
 
+                         <div class="modal-form-group">
+                            <label for="created_by">Created by:</label>
+                                <input type = "text" id="created_by" value="{{ tasks.created_by.username }}" readonly>
+
+                        </div>
+
+                        <div class="modal-form-group">
+                            <label for="updated_by">Updated by:</label>
+                                <input type = "text" id="updated_by" value="{{ tasks.updated_by.username}}" readonly>
+
+                             </div>
+
+
+                        </section>
+
+               <div class="modal-form-group">
+                   <h2 class="activities"> Activities: </h2>
+                   <hr>
+                   <br>
+                   <p> Hiiii </p>
+               </div>
+
+            <div class="modal-footer">
+                <button type="submit" class="modal-btn secondary-btn" id="submit_form">Save Changes</button>
+                   <button type="button" class="modal-btn secondary-btn" id="submit_form" onclick="window.location.href='{% url 'view_tasks' 1 %}' ">Cancel</button>
+            </div>
+
+
+
                     </form>
+        </div>
 
                 </div>
-            </section>
-            <div class="modal-footer">
-                <button class="modal-btn primary-btn" onclick="location.href='{% url 'view_tasks' 1 %}'">Close</button>
-                <button type="submit" class="modal-btn secondary-btn">Save Changes</button>
-            </div>
-        </div>
-    </div>
-</main>
+{% else %}
 
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+                <div class="change-password-modal">
+
+            <ul class="breadcrumbs">
+                <li style="color:white;"><a href="http://127.0.0.1:8000/">Home</a></li>
+                <li style="color:white;"><a href="{% url 'view_tasks' 1 %}">My Tasks</a></li>
+                <li>{{tasks.task_acronym}} : {{tasks.name}}</li>
+
+            </ul>
+
+
+            <br>
+            <br>
+
+
+            <h2 class="modal-header">{{ tasks.name }}</h2>
+        <hr style="width:65%; margin-top:-3%">
+
+            <section class="modal-body">
+                <form class="modal-form"  id="form-1" method="POST" action="{% url 'update_tasks' %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <input type="hidden" name="task_id" value="{{ tasks.id }}">
+
+
+                    <div class="modal-form-group">
+                        <div class="wrapper">
+                            <div class="box">
+                                <div class="input-bx">
+                                    <h2 class="upload-area-title">Add attachments...</h2>
+<!--                                        <label for="upload" class="uploadlabel">-->
+<!--                                            <span> <i class="fa fa-cloud-upload"></i></span>-->
+<!--                                            <p> Click to Upload</p>-->
+<!--                                        </label>-->
+
+                                         <input type="file" id="upload" name="upload" accept=".doc,.docx,.pdf,.jpg,.jpeg,.png" multiple>
+
+
+                                </div>
+
+                                <table>
+                                    <tbody id="data_append">
+
+                                    </tbody>
+
+                                </table>
+
+                                     <div>
+                                         <br>
+                                         <br>
+                                         <h1>Saved Attachments:</h1>
+                                         <hr>
+
+                                    <table>
+                                        {% for attachment in related_attachments %}
+                                        <tr class="table-row" id="table-row">
+                                        <td><a href="{{ attachment.document.url }}" target="_blank">{{ attachment.document_name }}</a></td>
+                                            <input type="hidden" name="old_documents" value="{{attachment.id}}">
+                                        <td style="padding:8px;"><a href="{{ attachment.document.url }}" download><i class="fa fa-download"></i></a></td>
+                                        <td style="padding:8px;" id="{{ tasks.id }}"><i class="fa fa-close"></i></td>
+
+
+                                        </tr>
+                                        {% endfor %}
+                                    </table>
+
+
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                    <div class="modal-form-group">
+                        <label for="description">Task Description: </label>
+
+                        <textarea id="description" name="description" placeholder="Task Description." rows="7"
+                                  cols="75">{{tasks.description}}</textarea>
+                    </div>
+
+
+
+
+
+
+
+                <!--                Side Division -->
+
+                <div class="password-guidelines" style="width:80%;">
+                    <h3 class="guidelines-header">Details</h3>
+                    <br>
+
+
+                        <div class="modal-form-group">
+                            <label for="task-type">Task Type:</label>
+                            <select name="task-type" id="task-type" disabled class="ignore-caret">
+
+                                {% if tasks.task_type == "task" %}
+
+                                    <option value="task" selected> Task</option>
+                                    <option value="bug">Bug</option>
+                                    <input type="hidden" name="task-type" value="Task">
+                                {% else %}
+
+                                    <option value="task"> Task</option>
+                                    <option value="bug" selected>Bug</option>
+                                <input type="hidden" name="task-type" value="Bug">
+
+                                {% endif %}
+
+                            </select>
+                        </div>
+
+
+                        <div class="modal-form-group">
+                            <label for="related-project-name">Related project</label>
+                            <select id="related-project-name" name="related-project-name" disabled class="ignore-caret">
+                                {% for project in projects %}
+                                <option value="{{ project.id }}" {% if project.name == tasks.project.name %} selected {% endif %}>{{ project.name }}
+                                </option>
+
+                                {% endfor %}
+                                <input type="hidden" name="related-project-name" value="{{ project.name }}">
+                            </select>
+                        </div>
+
+                        <div class="modal-form-group">
+                            <label for="assignee">Task Assignee</label>
+                            <select id="assignee" name="assignee" disabled class="ignore-caret">
+
+                                {% for user in users %}
+                                <option value="{{ user.id }}" {% if user.username == tasks.assign.username %} selected {% endif %}>{{ user.username }}</option>
+                                {% endfor %}
+                                <input type="hidden" name="assignee" value="{{ user.username }}">
+                            </select>
+                        </div>
+
+                        <div class="modal-form-group">
+
+                            <label for="task-status">Task Status:</label>
+                            <select name="task-status" id="task-status">
+                                <option value="todo" {% if tasks.task_status == "todo" %} selected {% endif %}>To-Do</option>
+                                <option value="in_progress" {% if tasks.task_status == "in_progress" %} selected {% endif %}>In-progress</option>
+                                <option value="completed" {% if tasks.task_status == "completed" %} selected {% endif %}>Completed</option>
+
+                            </select>
+                        </div>
+
+                        <div class="modal-form-group">
+                            <label for="task-priority">Task Priority:</label>
+                            <select name="task-priority" id="task-priority" disabled class="ignore-caret">
+
+                                {% if tasks.task_priority == "low" %}
+                                         <option value="low" selected>Low</option>
+                                         <option value="medium">Medium</option>
+                                         <option value="hi">High</option>
+                                         <input type="hidden" name="task-priority" value="low">
+                                {% elif tasks.task_priority == "medium" %}
+                                         <option value="low">Low</option>
+                                         <option value="medium" selected>Medium</option>
+                                         <option value="hi">High</option>
+                                         <input type="hidden" name="task-priority" value="medium">
+
+                                {% else %}
+                                         <option value="low">Low</option>
+                                         <option value="medium" selected>Medium</option>
+                                         <option value="hi" selected>High</option>
+                                         <input type="hidden" name="task-priority" value="hi">
+                                {% endif %}
+
+
+
+
+                            </select>
+                        </div>
+
+                       <div class="modal-form-group">
+                            <label for="created_by">Created by:</label>
+                                <input type = "text" id="created_by" value="{{ tasks.created_by.username }}" readonly>
+
+                        </div>
+
+                        <div class="modal-form-group">
+                            <label for="updated_by">Updated by:</label>
+                                <input type = "text" id="updated_by" value="{{ tasks.updated_by.username}}" readonly>
+
+                        </div>
+
+
+                            </section>
+
+                       <div class="modal-form-group">
+                            <h2 class="activities"> Activities </h2>
+                           <hr>
+                           <br>
+                                <p> Hiiii </p>
+
+                        </div>
+
+                    <div class="modal-footer">
+                <button type="submit" class="modal-btn secondary-btn" id="submit_form">Save Changes</button>
+                <button type="button" class="modal-btn secondary-btn" id="submit_form" onclick="window.location.href='{% url 'view_tasks' 1 %}' ">Cancel</button>
+
+                    </div>
+
+
+
+                    </form>
+
+
+                </div>
+
+                {% endif %}
+
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+<script src="{% static 'js/jquery.fileuploader.min.js' %}"></script>
+
+<script>
+    $('table').on('click', 'td[id="{{tasks.id }}"]', function(e) {
+        $(this).closest('tr').remove()
+})
+
+
+
+</script>
+
+<script>
+    $('input:file').fileuploader({
+    // Options will go here
+        addMore: true,
+});
+</script>
+
+
+
+<!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>-->
 <script type="text/javascript" src="{% static 'js/edit_task.js' %}"></script>
 {% endblock body %}
 
-<!--<main class="main">-->
-<!--        <div class="responsive-wrapper">-->
-<!--<br>-->
-<!--<br>-->
-<!--<br>-->
-<!--   <ul>-->
-<!--  <li><span class="14" style="font-weight: bolder;">14</span> To Do</li>-->
-<!--  <li><span class="4" style="font-weight: bolder;">4</span> In Progress</li>-->
-<!--  <li><span class="0" style="font-weight: bolder;">0</span> Code Review</li>-->
-<!--  <li><span class="8" style="font-weight: bolder;">8</span> Functional Review</li>-->
-<!--  <li><span class="6" style="font-weight: bolder;">6</span> Done</li>-->
-<!--  <li><span class="24" style="font-weight: bolder;">24</span> Ready for Release</li>-->
-<!--</ul>-->
 
 
-<!--  <div class="panel_board">-->
-
-<!--    <div style="top: 10px;position:relative;left:10px">Products /<a> LRN-7927</a></div>-->
-
-<!--<br>-->
-<!--<div style="position:relative;left: 10px; top: 70px;">Details</div>-->
-<!--&nbsp;-->
-<!--<div style="position:relative;border-top:2px solid #e8e8e8;width:590px;height:80px;-->
-<!--            top:60px;left: 10px"></div>-->
 
 
-<!--    <div class="container">-->
-<!--      <div class="left_internal_sub_contaianer">-->
-<!--      <div>Assignee:</div>-->
-<!--        <br>-->
-<!--      <div>Status:</div>-->
-<!--        <br>-->
-<!--      <div>Priority</div>-->
-<!--        <br>-->
-
-<!--      <div style="font-weight: bold; color:black;">People</div>-->
-
-<!--        <br>-->
-<!--      <div>Created by:</div>-->
-<!--        <br>-->
-<!--        <div>Updated by :</div>-->
-<!--<br>-->
-<!--      <div style="font-weight: bold; color: black;">Dates</div>-->
-<!--    <br>-->
-<!--      <div>Created at:</div>-->
-<!--        <br>-->
-
-<!--      <div>Updated at:</div>-->
-<!--      <div class="right_internal_sub-container">-->
-<!--      <div style="background:#4c004c; padding-bottom:1px;border-radius:5px;color:white; width:104px;height:18px;padding-left:2px">Client Support</div>-->
-<!--        <span class="glyphicon glyphicon-remove" style="color:white;position:relative;font-size:12px;left:-28px;top:3px;"></span>-->
-<!--        <br>-->
-<!--&lt;!&ndash;      <div style="border:1px solid #e5e52d; width: 115px;height:19px; border-radius:4px;padding-bottom:1px;">Functional Review</div>&ndash;&gt;-->
-<!--        <br>-->
 
 
-<!--        <br>-->
-<!--      <div style="position: relative;top:5px;">KKS04, </div>-->
-<!--&lt;!&ndash;        <div>jira_escalated, </div>&ndash;&gt;-->
-<!--&lt;!&ndash;        <div>jira_update, support</div>&ndash;&gt;-->
-<!--        <br>-->
-<!--        <div style="font-syle:italic;top:14px;position:relative">None</div>-->
-<!--        <br>-->
-<!--        <div style="position:relative;top:15px;">None</div>-->
-<!--        <br>-->
-<!--        <div style="position:relative;top:20px;margin-bottom:10px;">None</div>-->
-<!--        <br>-->
-<!--        <br>-->
-<!--        <br>-->
 
-<!--        <div style="position: relative;top:33px;"></div>-->
-<!--        <br>-->
-<!--        <br>-->
-<!--        <div style="position: relative;top:35px;"></div>-->
-<!--        <br>-->
-<!--        <br>-->
-<!--        <div style="position: relative;top:39px;"></div>-->
-<!--        <br>-->
-<!--        <br>-->
-<!--        <br>-->
-<!--        <br>-->
-<!--        <br>-->
-<!--        <div style="position: relative;top:69px;"></div>-->
-<!--        <br>-->
-<!--        <br>-->
 
-<!--        <br>-->
-<!--        <div style="position: relative"></div>-->
 
-<!--      </div>-->
-<!--    </div>-->
-<!--    </div>-->
-<!--</div>-->
-<!--        </div>-->
-<!--</main>-->
 
-<!--&lt;!&ndash;    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>&ndash;&gt;-->
-<!--        <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>-->
-<!--    <script type="text/javascript" src="{% static 'js/edit_task.js' %}"></script>-->
+
+
+
+
+
+
+
+
+
+
+
 
 
 

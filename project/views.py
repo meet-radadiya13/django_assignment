@@ -9,7 +9,7 @@ from django.shortcuts import render, redirect
 from django.views.decorators.http import require_POST
 
 from authentication.models import User
-from project.models import Project, Task, CommonModel
+from project.models import Project, Task, CommonModel, Attachment
 
 
 # Create your views here.
@@ -176,7 +176,8 @@ def search_projects(request):
     context["current_page"] = page_obj.number
     return JsonResponse(context, safe=False)
 
-#For Tasks.
+
+# For Tasks.
 @login_required()
 def view_tasks(request, page_no=1):
     # current_user = request.user
@@ -185,7 +186,7 @@ def view_tasks(request, page_no=1):
     # return render(request, 'task/task.html', context)
 
     current_user = request.user
-    my_tasks = Task.objects.filter(Q(assign=current_user) & Q(is_deleted = False))
+    my_tasks = Task.objects.filter((Q(assign=current_user) | Q(created_by=request.user)) & Q(is_deleted=False))
 
     projects = Project.objects.all()
 
@@ -212,7 +213,6 @@ def view_tasks(request, page_no=1):
     return render(request, 'task/task.html', context)
 
 
-
 @login_required
 def add_tasks(request):
     users = User.objects.all()
@@ -227,6 +227,7 @@ def insert_tasks(request):
     task_name = request.POST.get('task_name')
     # task_acronym = request.POST.get('task_acronym')
     task_assignee = request.POST.get('assignee')
+
     task_description = request.POST.get('task_desc')
     task_related_project = request.POST.get('related-project-name')
     task_type = request.POST.get('task-type')
@@ -235,8 +236,8 @@ def insert_tasks(request):
 
     project_acronym = Project.objects.get(pk=task_related_project)
     task_acronym_partial = project_acronym.acronym
-    task_count = Task.objects.filter(project= task_related_project).exclude(is_deleted=True).count() +1
-    task_acronym_partial += "-"+ str(task_count)
+    task_count = Task.objects.filter(project=task_related_project).exclude(is_deleted=True).count() + 1
+    task_acronym_partial += "-" + str(task_count)
     task = Task()
 
     task.project = Project.objects.get(pk=task_related_project)
@@ -251,21 +252,22 @@ def insert_tasks(request):
     task.task_type = task_type
     task.save()
 
-    return redirect("view_tasks",page_no=1)
+    return redirect("view_tasks", page_no=1)
 
 
 @login_required
 def edit_tasks(request, task_id):
-    if Task.objects.filter(Q(id=task_id) & Q(assign=request.user)).exists():
+    if Task.objects.filter(Q(id=task_id) | Q(assign=request.user)).exists():
         tasks = Task.objects.get(id=task_id)
-        users = User.objects.exclude(Q(username=request.user.username))
+        users = User.objects.all()
         projects = Project.objects.all()
+        attachment_related_task = Task.objects.get(id=task_id)
+        related_attachments = Attachment.objects.filter(task=attachment_related_task, is_deleted=False).distinct('document_name')
 
-        context = {"tasks": tasks, "users": users,"projects":projects}
+        context = {"tasks": tasks, "users": users, "projects": projects, "related_attachments": related_attachments}
         return render(request, "task/edit_tasks.html", context)
     else:
         return redirect("view_tasks", page_no=1)
-
 
 
 @login_required
@@ -273,22 +275,41 @@ def edit_tasks(request, task_id):
 def update_tasks(request):
     task_id = request.POST.get("task_id")
     task_type = request.POST.get("task-type")
-    task_name = request.POST.get("task_name")
+    # task_name = request.POST.get("task_name")
     assignee = request.POST.get("assignee")
+    user_object = User.objects.get(id=assignee)
     task_status = request.POST.get("task-status")
     task_priority = request.POST.get("task-priority")
+    task_description = request.POST.get('description')
+    task_attachments = list(set(request.FILES.getlist('upload[]')))
+    attachment_related_task = Task.objects.get(id=task_id)
+    old_documents = list(map(int, request.POST.getlist('old_documents')))
+    saved_documents = list(Attachment.objects.filter(task=task_id).values_list('id',flat=True))
+    for i in saved_documents:
+        if i not in old_documents:
+            delete = Attachment.objects.get(id=i)
+            delete.is_deleted = True
+            delete.save()
 
-    task = Task.objects.get(id=task_id)
 
-    # task.assign.clear()
-    # users = []
-    # for user in assignee:
-    #     users.append(User.objects.filter(username=user))
+    for task_attachment in task_attachments:
+        attachments = Attachment()
+        attachments.document_name = task_attachment.name
+        attachments.document = task_attachment
+        attachments.task = attachment_related_task
+        attachments.created_by = request.user
+        attachments.updated_by = request.user
+        attachments.save()
+
+    print(task_attachments)
+    task = Task.objects.filter(id=task_id).first()
 
     task.task_status = task_status
     task.task_priority = task_priority
     task.task_type = task_type
-    task.name = task_name
+    # task.name = task_name
+    task.description = task_description
+    task.assign = user_object
     task.updated_by = request.user
 
     # if completed:
@@ -297,6 +318,7 @@ def update_tasks(request):
     #     project.is_completed = False
     task.save()
     return redirect("view_tasks", page_no=1)
+
 
 @login_required
 def search_tasks(request):
@@ -308,12 +330,12 @@ def search_tasks(request):
     context = {}
     current_user = request.user
     tasks = Task.objects. \
-        filter(Q(assign=current_user) & Q(is_deleted = False)).values('pk', 'name', 'task_acronym',
-                                              'task_type',
-                                              'project__name',
-                                              'task_priority',
-                                              'task_status',
-                                              )
+        filter(Q(assign=current_user) & Q(is_deleted=False)).values('pk', 'name', 'task_acronym',
+                                                                    'task_type',
+                                                                    'project__name',
+                                                                    'task_priority',
+                                                                    'task_status',
+                                                                    )
     if query is not None:
         tasks = tasks.filter(Q(name__icontains=query))
 
@@ -336,6 +358,7 @@ def search_tasks(request):
     print(tasks)
     return JsonResponse(context, safe=False)
 
+
 @login_required
 def filter_tasks(request):
     query = request.GET.get('query')
@@ -346,15 +369,15 @@ def filter_tasks(request):
     context = {}
     current_user = request.user
     tasks = Task.objects. \
-        filter(assign=current_user).exclude(is_deleted= True).values('pk', 'name', 'task_acronym',
-                                              'task_type',
-                                              'project__name',
-                                              'task_priority',
-                                              'task_status',
-                                              )
+        filter(Q(assign=current_user) | Q(created_by=current_user)).exclude(is_deleted=True).values('pk', 'name',
+                                                                                                    'task_acronym',
+                                                                                                    'task_type',
+                                                                                                    'project__name',
+                                                                                                    'task_priority',
+                                                                                                    'task_status',
+                                                                                                    )
     if query is not None:
-            tasks = tasks.filter(Q(project__name=query))
-
+        tasks = tasks.filter(Q(project__name=query))
 
     paginator = Paginator(tasks, 10)
     page_obj = paginator.get_page(page_no)
@@ -374,8 +397,3 @@ def filter_tasks(request):
     print(context)
     print(tasks)
     return JsonResponse(context, safe=False)
-
-
-
-
-

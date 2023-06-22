@@ -52,3 +52,63 @@ tr, td, th{
     margin-right: 15%;
     margin-left: 15%;
 }
+
+
+/*For breadcrumbs*/
+
+.breadcrumbs {
+	display: flex;
+	padding: 0;
+	list-style-type: none;
+	overflow: hidden;
+}
+
+.breadcrumbs li {
+	background-color: #434ce8;
+	border-radius: 5px 50px 50px 5px;
+	box-shadow: 3px 0 10px #404089;
+
+	display: inline-block;
+	font-size: 12px;
+	font-weight: bold;
+	padding: 12px 30px;
+	position: relative;
+	/*text-transform: uppercase;*/
+}
+
+.breadcrumbs li:nth-of-type(1) {
+	z-index: 100;
+}
+
+.breadcrumbs li:nth-of-type(2) {
+	z-index: 90;
+}
+
+.breadcrumbs li:nth-of-type(3) {
+	z-index: 80;
+}
+
+.breadcrumbs li:nth-of-type(4) {
+	z-index: 70;
+}
+
+.breadcrumbs li:not(:first-of-type) {
+	padding-left: 40px;
+	margin-left: -20px;
+}
+
+.breadcrumbs li:last-of-type {
+	/*box-shadow: none;*/
+	background-color: #fff;
+	color: #0984e3;
+}
+li a{
+    color:white;
+}
+li a:link{
+  text-decoration: none;
+  color: #ffffff;
+}
+li a:hover{
+  color:#ffffff;
+}

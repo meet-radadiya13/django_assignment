@@ -7,9 +7,10 @@ Tasks
 
 {% block styles %}
 <link href="{% static 'css/task.css' %}" rel="stylesheet" type="text/css">
+
 <!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/css/bootstrap.css">-->
 <!--    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/dataTables.bootstrap4.min.css">-->
-
+<!--<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.2/css/all.min.css" rel="stylesheet">-->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
 <!--<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">-->
 
@@ -25,6 +26,11 @@ Tasks
 <main class="main">
 
     <div class="responsive-wrapper">
+        <ul class="breadcrumbs">
+                <li style="color:white; !important;" ><a href="http://127.0.0.1:8000/">Home</a></li>
+                <li>My Tasks</li>
+
+        </ul>
 
         <div class="content-header">
 
