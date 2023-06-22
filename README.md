@@ -27,16 +27,22 @@
 ```python
 DEBUG = True
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': '<django_project>',
-        'USER': '<admin_name>',
-        'PASSWORD': '<password>',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
+  'default': {
+    'ENGINE': 'django.db.backends.postgresql',
+    'NAME': '<django_project>',
+    'USER': '<admin_name>',
+    'PASSWORD': '<password>',
+    'HOST': 'localhost',
+    'PORT': '5432',
+  }
 }
-SECRET_KEY = 'QYEGT87GCTQ387ERT2FBW3IUT8CS34G8587W4YTVSERHS4'
+SECRET_KEY = '<secret_key>'
+
+EMAIL_HOST_USER = '<email_id>'
+EMAIL_HOST_PASSWORD = '<password>'
+
+STRIPE_PUBLIC_KEY = '<pubic_key>'
+STRIPE_SECRET_KEY = '<secret_key>'
 ```
 #### 7. Run migrations:
 ```
