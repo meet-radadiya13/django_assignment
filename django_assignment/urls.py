@@ -22,6 +22,7 @@ from django.urls import path, include, re_path
 from django.views.static import serve
 
 handler404 = "authentication.views.handler404"
+handler401 = "authentication.views.handler401"
 
 
 def static(prefix, view=serve, **kwargs):

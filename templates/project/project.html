@@ -10,6 +10,16 @@
 {% endblock styles %}
 
 {% block body %}
+    <script src="https://rawgit.com/moment/moment/2.2.1/min/moment.min.js"></script>
+    <script>
+        function change_date(dateString) {
+            const date = moment(dateString, 'MMM DD, YYYY, hh:mm a');
+            const localDate = new Date(date).toLocaleString(undefined, {
+                timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                hour12: true });
+                return localDate;
+            }
+    </script>
     <main class="main">
         <div class="responsive-wrapper">
             <div class="main-header">
@@ -67,7 +77,7 @@
                     </ul>
                 </article>
                 <footer class="card-footer">
-                    <a class="footer-link" href="{% url 'add_tasks' %}">View Tasks</a>
+                    <a  href="{% url 'view_project_tasks' %}?project_id={{ project.id }}" class="footer-link">View Tasks</a>
                 </footer>
             </div>
         {% endfor %}
@@ -135,7 +145,6 @@
             let query = $('#search-input').val();
             let url = $('#search-url').attr('data-url');
             let nav = '';
-            console.log('pageno=', page_no)
             current_request = $.ajax({
                 url: url,
                 type: 'GET',
@@ -180,9 +189,9 @@
                             '                        </li>\n' +
                             '                        <li><b>Deadline:</b> <br> ' + data.page_obj[i].dead_line + '</li>\n' +
                             '                        <li><b>Created by:</b> <br> ' + data.page_obj[i].created_by__username + '</li>\n' +
-                            '                        <li><b>Created at:</b> <br> ' + change_date(data.page_obj[i].created_at) + '</li>\n' +
+                            '                        <li><b>Created at:</b> <br> ' + change_date_js(data.page_obj[i].created_at) + '</li>\n' +
                             '                        <li><b>Updated by:</b> <br>  ' + data.page_obj[i].updated_by__username + '</li>\n' +
-                            '                        <li><b>Updated at:</b> <br> ' + change_date(data.page_obj[i].updated_at) + '</li>\n' +
+                            '                        <li><b>Updated at:</b> <br> ' + change_date_js(data.page_obj[i].updated_at) + '</li>\n' +
                             '                </ul>\n' +
                             '                </article>\n' +
                             '                <footer class="card-footer">\n' +

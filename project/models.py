@@ -108,7 +108,16 @@ class AuditHistory(CommonModel):
     )
     action = models.TextField(null=True, blank=True)
     action_by = models.ForeignKey(
-        User, null=True, blank=True, on_delete=models.DO_NOTHING
+        User, null=True, blank=True, on_delete=models.DO_NOTHING,
+        related_name="action_by"
+    )
+    user_from = models.ForeignKey(
+        User, null=True, blank=True, on_delete=models.DO_NOTHING,
+        related_name="user_form"
+    )
+    user_to = models.ForeignKey(
+        User, null=True, blank=True, on_delete=models.DO_NOTHING,
+        related_name="user_to"
     )
 
     class Meta:

@@ -24,4 +24,10 @@ urlpatterns = [
     path("search_tasks/", views.search_tasks, name="search_tasks"),
     path("filter_tasks/", views.filter_tasks, name="filter_tasks"),
 
+    path("view_project_tasks/", views.view_project_tasks,
+         name="view_project_tasks"),
+    path("project_filter_tasks/", views.project_filter_tasks,
+         name="project_filter_tasks"),
+    path("project_search_tasks/", views.project_search_tasks,
+         name="project_search_tasks"),
 ]
