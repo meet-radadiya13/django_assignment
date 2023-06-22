@@ -1,0 +1,269 @@
+{% extends 'root/base.html' %}
+{% load static %}
+
+{% block title %}
+    Company
+{% endblock title %}
+
+{% block styles %}
+    <link href="{% static 'css/company.css' %}" rel="stylesheet"
+          type="text/css">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+{% endblock styles %}
+
+{% block body %}
+    {% if messages %}
+        <script>
+            {% for message in messages %}
+                alert("{{ message }}");
+            {% endfor %}
+        </script>
+    {% endif %}
+    <main class="main">
+        <div class="table-responsive responsive-wrapper">
+            <div class="main-header">
+                <a href="#" class="button">
+                    <i class="ph-plus-bold"></i>
+                    <span>Add Tasks</span>
+                </a>
+                <div class="search">
+                    <form method="post" id="search-form" action="#"
+                          style="width: inherit;">
+                        {% csrf_token %}
+                        <input id="search-input" type="text"
+                               placeholder="Search" name="search"
+                               value="{{ name }}"/>
+                        <button type="submit">
+                            <i class="ph-magnifying-glass-bold"></i>
+                        </button>
+                        <input type="hidden" id="project_id" value="{{ project_id }}">
+                    </form>
+                </div>
+            </div>
+            <table class="table table-hover">
+                <thead>
+                <tr>
+                    <th scope="col">
+                        <a data-toggle="modal"
+                           data-target="#exampleModal">
+                            <i class="fa-solid fa-filter"
+                               style="color: #404089;"></i></a>
+                    </th>
+                    <div class="modal fade" id="exampleModal" tabindex="-1"
+                         role="dialog"
+                         aria-labelledby="exampleModalLabel"
+                         aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered"
+                             role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title"
+                                        id="exampleModalLabel">Choose
+                                        filters</h5>
+                                    <button type="button" class="close"
+                                            data-dismiss="modal"
+                                            aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <form>
+                                        <div class="form-group">
+                                            <label for="assign">Assignee</label>
+                                            <select class="form-control" id="assign" name="assign">
+                                                <option disabled selected>Choose Assignee</option>
+                                                {% for emp in assign %}
+                                                    <option value="{{ emp.assign_id }}">{{ emp.assign__username }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="priority">Priority</label>
+                                            <select class="form-control" id="priority" name="priority">
+                                                <option disabled selected>Choose Priority</option>
+                                                <option value="hi">High</option>
+                                                <option value="medium">Medium</option>
+                                                <option value=low">Low</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="status">Status</label>
+                                            <select class="form-control" id="status" name="status">
+                                                <option disabled selected>Choose Status</option>
+                                                <option value="todo">TODO</option>
+                                                <option value="in_progress">In Progress</option>
+                                                <option value="completed">Completed</option>
+                                            </select>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button"
+                                            class="btn btn-secondary"
+                                            data-dismiss="modal">Close
+                                    </button>
+                                    <button type="button"
+                                            class="btn btn-primary"
+                                            style="background-color: #404089"
+                                            id="filter-submit"
+                                            data-dismiss="modal">
+                                        Submit
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <th scope="col">Name</th>
+                    <th scope="col">Assignee</th>
+                    <th scope="col">Priority</th>
+                    <th scope="col">Status</th>
+                </tr>
+                </thead>
+                <tbody id="table">
+                {% for task in tasks %}
+                    <tr>
+                        {% if task.task_type == "bug" %}
+                            <td><i class="fa-solid fa-bug"
+                                   style="color: #ff0000;"></i></td>
+                        {% else %}
+                            <td><i class="fa-solid fa-list-check"
+                                   style="color: #3cb043;"></i></td>
+                        {% endif %}
+                        <td><a href="#"
+                               class="task-name">{{ task.task_acronym }} &nbsp;
+                            | &nbsp; {{ task.name }}</a></td>
+                        <td>{{ task.assign.firstname }} {{ task.assign.lastname }}</td>
+                        {% if task.task_priority == "hi" %}
+                            <td>
+                                <button type="button"
+                                        class="btn btn-outline-danger">High
+                                </button>
+                            </td>
+                        {% elif task.task_priority == "medium" %}
+                            <td>
+                                <button type="button"
+                                        class="btn btn-outline-warning">Medium
+                                </button>
+                            </td>
+                        {% else %}
+                            <td>
+                                <button type="button"
+                                        class="btn btn-outline-success">Low
+                                </button>
+                            </td>
+                        {% endif %}
+                        {% if task.task_status == "todo" %}
+                            <td>
+                                <button type="button"
+                                        class="btn btn-outline-danger">TODO
+                                </button>
+                            </td>
+                        {% elif task.task_status == "in_progress" %}
+                            <td>
+                                <button type="button"
+                                        class="btn btn-outline-warning">In
+                                    Progress
+                                </button>
+                            </td>
+                        {% else %}
+                            <td>
+                                <button type="button"
+                                        class="btn btn-outline-success">
+                                    Completed
+                                </button>
+                            </td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+            integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+            crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js"
+            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+            crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js"
+            integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+            crossorigin="anonymous"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            let project_id = $('#project_id').val();
+            $('#filter-submit').click(function (event) {
+                event.preventDefault();
+                let url = "{% url 'project_filter_tasks' %}"
+                let assignee = $('#assign').val()
+                let priority = $('#priority').val()
+                let status = $('#status').val()
+                let data = 'assign=' + assignee + '&priority=' + priority + '&status=' + status + '&project_id=' + project_id
+                get_tasks(url, data)
+            });
+            $('#search-form').keyup(function (event) {
+                event.preventDefault();
+                let url = "{% url 'project_search_tasks' %}"
+                let query = $('#search-input').val()
+                let data = 'query=' + query + '&project_id=' + project_id
+                get_tasks(url, data)
+            });
+        });
+
+        function get_tasks(url, data) {
+            let current_request = null;
+            current_request = $.ajax({
+                url: url,
+                type: 'GET',
+                data: data,
+                beforeSend: function () {
+                    if (current_request != null) {
+                        current_request.abort();
+                    }
+                },
+                success: function (data) {
+                    $('#table').empty();
+                    let res_data = '';
+                    let status = '';
+                    let priority = '';
+                    let type = '';
+                    for(var i=0; i<data.tasks.length; i++){
+                        if(data.tasks[i].task_type === 'task') {
+                            type = '<td><i class="fa-solid fa-list-check" style="color: #3cb043;"></i></td>'
+                        }
+                        else {
+                            type = '<td><i class="fa-solid fa-bug" style="color: #ff0000;"></i></td>'
+                        }
+                        if(data.tasks[i].task_priority === 'hi') {
+                            priority = '<td><button type="button" class="btn btn-outline-danger">High</button></td>'
+                        }
+                        else if (data.tasks[i].task_priority === 'medium') {
+                            priority = '<td><button type="button" class="btn btn-outline-warning">Medium</button></td>'
+                        }
+                        else {
+                            priority = '<td><button type="button" class="btn btn-outline-success">Low</button></td>'
+                        }
+                        if(data.tasks[i].task_status === 'todo') {
+                            status = '<td><button type="button" class="btn btn-outline-danger">TODO</button></td>'
+                        }
+                        else if (data.tasks[i].task_status === 'in_progress') {
+                            status = '<td><button type="button" class="btn btn-outline-warning">In Progress</button></td>'
+                        }
+                        else {
+                            status = '<td><button type="button" class="btn btn-outline-success">Completed</button></td>'
+                        }
+                        res_data += '<tr>' + type +
+                        '<td><a href="#" class="task-name">'+ data.tasks[i].task_acronym + '&nbsp; | &nbsp;' + data.tasks[i].name +'</a></td>' +
+                        '<td>' + data.tasks[i].assign__firstname + ' ' + data.tasks[i].assign__lastname + '</td>' + priority + status + '</tr>'
+                    }
+                    $('#table').html(res_data)
+                },
+                complete: function () {
+                    current_request = null;
+                }
+            });
+        }
+    </script>
+{% endblock body %}

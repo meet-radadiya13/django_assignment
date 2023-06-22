@@ -36,3 +36,13 @@ table {
     color: #FFFFFF;
     border: 1px solid #dee2e6;
 }
+
+.task-name {
+    text-decoration: none;
+    color: black;
+}
+
+.task-name:hover {
+    text-decoration: none;
+    color: #434ce8;
+}
