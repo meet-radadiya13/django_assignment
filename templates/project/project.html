@@ -29,6 +29,7 @@
                 </a>
                 <div class="search">
                     <form method="get" id="search-form" action="#" style="width: inherit;">
+
                         {% csrf_token %}
                         <input id="search-input" type="text" placeholder="Search" name="search" value="{{ name }}"/>
                         <button type="submit">

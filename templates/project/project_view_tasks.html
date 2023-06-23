@@ -25,7 +25,7 @@
     <main class="main">
         <div class="table-responsive responsive-wrapper">
             <div class="main-header">
-                <a href="#" class="button">
+                <a href="{% url 'add_tasks' %}" class="button">
                     <i class="ph-plus-bold"></i>
                     <span>Add Tasks</span>
                 </a>
@@ -132,7 +132,7 @@
                             <td><i class="fa-solid fa-list-check"
                                    style="color: #3cb043;"></i></td>
                         {% endif %}
-                        <td><a href="#"
+                        <td><a href="{% url 'edit_tasks' task.id %}"
                                class="task-name">{{ task.task_acronym }} &nbsp;
                             | &nbsp; {{ task.name }}</a></td>
                         <td>{{ task.assign.firstname }} {{ task.assign.lastname }}</td>

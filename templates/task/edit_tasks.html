@@ -137,15 +137,18 @@ Edit Tasks
                         </div>
 
 
-                        <div class="modal-form-group">
+
+                     <div class="modal-form-group">
                             <label for="related-project-name">Related project</label>
-                            <select id="related-project-name" name="related-project-name" readonly class="ignore-caret">
+                            <select id="related-project-name" name="related-project-name" disabled class="ignore-caret">
                                 {% for project in projects %}
                                 <option value="{{ project.id }}" {% if project.name == tasks.project.name %} selected {% endif %}>{{ project.name }}
                                 </option>
                                 {% endfor %}
+                                <input type="hidden" name="related-project-name-updated" value="{{ project.id }}">
                             </select>
                         </div>
+
 
                         <div class="modal-form-group">
                             <label for="assignee">Task Assignee</label>
@@ -198,7 +201,20 @@ Edit Tasks
                    <h2 class="activities"> Activities: </h2>
                    <hr>
                    <br>
-                   <p> Hiiii </p>
+                      <ul>
+
+              {% for activity in activities %}
+
+                         {% if activity.action == "Task assignee changed" %}
+
+                               <li type="circle">{{ activity.action }} from <b>{{ activity.user_from }}</b> to <b>{{ activity.user_to  }}</b> by <b>{{ activity.action_by }}</b> at <b>{{ activity.updated_at }}</b></li>
+                             {% else %}
+
+                                <li type="circle">{{ activity.action }} by <b>{{activity.action_by}}</b> at <b>{{ activity.updated_at }}</b></li>
+                         {% endif %}
+              {% endfor %}
+                           </ul>
+
                </div>
 
             <div class="modal-footer">
@@ -316,12 +332,12 @@ Edit Tasks
 
                                     <option value="task" selected> Task</option>
                                     <option value="bug">Bug</option>
-                                    <input type="hidden" name="task-type" value="Task">
+                                    <input type="hidden" name="task-type" value="task">
                                 {% else %}
 
                                     <option value="task"> Task</option>
                                     <option value="bug" selected>Bug</option>
-                                <input type="hidden" name="task-type" value="Bug">
+                                <input type="hidden" name="task-type" value="bug">
 
                                 {% endif %}
 
@@ -335,9 +351,8 @@ Edit Tasks
                                 {% for project in projects %}
                                 <option value="{{ project.id }}" {% if project.name == tasks.project.name %} selected {% endif %}>{{ project.name }}
                                 </option>
-
                                 {% endfor %}
-                                <input type="hidden" name="related-project-name" value="{{ project.name }}">
+                                <input type="hidden" name="related-project-name-updated" value="{{ project.id }}">
                             </select>
                         </div>
 
@@ -348,7 +363,7 @@ Edit Tasks
                                 {% for user in users %}
                                 <option value="{{ user.id }}" {% if user.username == tasks.assign.username %} selected {% endif %}>{{ user.username }}</option>
                                 {% endfor %}
-                                <input type="hidden" name="assignee" value="{{ user.username }}">
+                                <input type="hidden" name="assignee-updated" value="{{ user.id }}">
                             </select>
                         </div>
 
@@ -410,7 +425,19 @@ Edit Tasks
                             <h2 class="activities"> Activities </h2>
                            <hr>
                            <br>
-                                <p> Hiiii </p>
+                           <ul>
+
+              {% for activity in activities %}
+
+                         {% if activity.action == "Task assignee changed" %}
+
+                               <li type="circle">{{ activity.action }} from <b>{{ activity.user_from }}</b> to <b>{{ activity.user_to  }}</b> by <b>{{ activity.action_by }}</b> at <b>{{ activity.updated_at }}</b></li>
+                         {% else %}
+
+                                <li type="circle">{{ activity.action }} by <b>{{activity.action_by}}</b> at <b>{{ activity.updated_at }}</b></li>
+                         {% endif %}
+              {% endfor %}
+                           </ul>
 
                         </div>
 

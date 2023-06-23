@@ -10,7 +10,7 @@ from django.shortcuts import redirect, render
 from django.views.decorators.http import require_GET, require_POST
 
 from authentication.models import User
-from project.models import Project, Task, CommonModel, Attachment
+from project.models import Project, Task, CommonModel, Attachment,AuditHistory
 
 
 # Create your views here.
@@ -236,14 +236,9 @@ def search_projects(request):
 # For Tasks.
 @login_required()
 def view_tasks(request, page_no=1):
-    # current_user = request.user
-    # my_tasks = Task.objects.filter(Q(assign=current_user))
-    # context = {'my_tasks': my_tasks}
-    # return render(request, 'task/task.html', context)
 
     current_user = request.user
     my_tasks = Task.objects.filter((Q(assign=current_user) | Q(created_by=request.user)) & Q(is_deleted=False))
-
     projects = Project.objects.all()
 
     all_tasks = request.GET.get("task_filter")
@@ -271,7 +266,7 @@ def view_tasks(request, page_no=1):
 
 @login_required
 def add_tasks(request):
-    users = User.objects.all()
+    users = User.objects.all().exclude(username="admin")
     projects = Project.objects.all()
     context = {'users': users, 'projects': projects}
     return render(request, 'task/add_task.html', context)
@@ -281,15 +276,12 @@ def add_tasks(request):
 @require_POST
 def insert_tasks(request):
     task_name = request.POST.get('task_name')
-    # task_acronym = request.POST.get('task_acronym')
     task_assignee = request.POST.get('assignee')
-
     task_description = request.POST.get('task_desc')
     task_related_project = request.POST.get('related-project-name')
     task_type = request.POST.get('task-type')
     task_status = request.POST.get('task-status')
     task_priority = request.POST.get('task-priority')
-
     project_acronym = Project.objects.get(pk=task_related_project)
     task_acronym_partial = project_acronym.acronym
     task_count = Task.objects.filter(project=task_related_project).exclude(is_deleted=True).count() + 1
@@ -315,12 +307,13 @@ def insert_tasks(request):
 def edit_tasks(request, task_id):
     if Task.objects.filter(Q(id=task_id) | Q(assign=request.user)).exists():
         tasks = Task.objects.get(id=task_id)
-        users = User.objects.all()
+        users = User.objects.all().exclude(username="admin")
         projects = Project.objects.all()
         attachment_related_task = Task.objects.get(id=task_id)
         related_attachments = Attachment.objects.filter(task=attachment_related_task, is_deleted=False).distinct('document_name')
+        activities = AuditHistory.objects.filter(project=tasks.project ,task = tasks).order_by('updated_at')
 
-        context = {"tasks": tasks, "users": users, "projects": projects, "related_attachments": related_attachments}
+        context = {"tasks": tasks, "users": users, "projects": projects, "related_attachments": related_attachments, 'activities':activities}
         return render(request, "task/edit_tasks.html", context)
     else:
         return redirect("view_tasks", page_no=1)
@@ -331,21 +324,32 @@ def edit_tasks(request, task_id):
 def update_tasks(request):
     task_id = request.POST.get("task_id")
     task_type = request.POST.get("task-type")
-    # task_name = request.POST.get("task_name")
     assignee = request.POST.get("assignee")
-    user_object = User.objects.get(id=assignee)
+    assignee_updated= request.POST.get("assignee-updated")
+    user_object = User.objects.filter(Q(id=assignee) | Q(id=assignee_updated))[0]
     task_status = request.POST.get("task-status")
     task_priority = request.POST.get("task-priority")
     task_description = request.POST.get('description')
     task_attachments = list(set(request.FILES.getlist('upload[]')))
     attachment_related_task = Task.objects.get(id=task_id)
     old_documents = list(map(int, request.POST.getlist('old_documents')))
-    saved_documents = list(Attachment.objects.filter(task=task_id).values_list('id',flat=True))
+    saved_documents = list(Attachment.objects.filter(Q(task=task_id)&Q(is_deleted=False)).values_list('id',flat=True))
+
     for i in saved_documents:
         if i not in old_documents:
+
             delete = Attachment.objects.get(id=i)
             delete.is_deleted = True
             delete.save()
+            audit_history = AuditHistory(
+                task = attachment_related_task,
+                project = attachment_related_task.project,
+                action_by = request.user,
+                action=f"Attachment " 
+                       f"{delete.document_name} was deleted",
+            )
+            audit_history.save()
+
 
 
     for task_attachment in task_attachments:
@@ -363,17 +367,11 @@ def update_tasks(request):
     task.task_status = task_status
     task.task_priority = task_priority
     task.task_type = task_type
-    # task.name = task_name
     task.description = task_description
     task.assign = user_object
     task.updated_by = request.user
-
-    # if completed:
-    #     project.is_completed = True
-    # else:
-    #     project.is_completed = False
     task.save()
-    return redirect("view_tasks", page_no=1)
+    return redirect("edit_tasks", task_id=task_id)
 
 
 @login_required
