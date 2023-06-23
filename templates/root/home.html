@@ -10,6 +10,13 @@
 {% endblock styles %}
 
 {% block body %}
+    {% if messages %}
+        <script>
+            {% for message in messages %}
+                alert("{{ message }}");
+            {% endfor %}
+        </script>
+    {% endif %}
     <main class="main">
         <div class="responsive-wrapper">
             <div class="main-content">

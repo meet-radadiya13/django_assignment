@@ -9,12 +9,15 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Case, Count, Q, When
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
+from django.utils.decorators import method_decorator
+from django.views import View
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 
-from authentication.models import User
-from authentication.utils import send_registration_mail
+from authentication.models import Company, PaymentHistory, User
+from authentication.utils import check_subscription, send_registration_mail
 from django_assignment import settings
 from project.models import Project, Task
 
@@ -155,6 +158,11 @@ def validate_user(request):
     user = authenticate(email=email, password=password)
     if user is not None:
         login(request, user)
+        if check_subscription(request):
+            messages.error(
+                request, "Your subscription Expires in less then "
+                         "3 days"
+            )
         return redirect("home")
     else:
         messages.error(request, "Invalid username or password")
@@ -446,42 +454,131 @@ def add_subscription(request):
         f'Data: {request.GET}, '
         f'URI: {request.build_absolute_uri()}]'
     )
-    # domain_url = request.build_absolute_uri('/')
-    # stripe.api_key = settings.STRIPE_SECRET_KEY
-    # checkout_session = stripe.checkout.Session.create(
-    #     client_reference_id=request.user.id if request.user.is_authenticated else None,
-    #     success_url=domain_url + 'payment_success?session_id={'
-    #                              'CHECKOUT_SESSION_ID}',
-    #     cancel_url=domain_url + 'payment_cancel/',
-    #     payment_method_types=['card'],
-    #     mode='subscription',
-    #     line_items=[
-    #         {
-    #             'price': settings.STRIPE_PRICE_ID,
-    #             'quantity': 1,
-    #         }
-    #     ]
-    # )
     if request.user.is_owner:
-        customer = stripe.Customer.create(
-            email=request.user.email,
-            name=request.user.username,
-            payment_method="pm_card_visa",
-            invoice_settings={
-                "default_payment_method": "pm_card_visa",
-            }
-        )
-        subscription = stripe.Subscription.create(
-            customer=customer.id,
-            items=[
-                {"price": settings.STRIPE_PRICE_ID},
-            ],
-            expand=["latest_invoice.payment_intent"],
-        )
-        user = User.objects.get(id=request.user.id)
-        user.stripe_customer_id = customer.id
-        user.stripe_subscription_id = subscription.id
-        user.save()
-        return redirect('https://buy.stripe.com/test_4gweV8a6fcKVcggcMM')
+        stripe_customer_id = request.user.stripe_customer_id
+        if stripe_customer_id is not None:
+            domain_url = request.build_absolute_uri('/')
+            checkout_session = stripe.checkout.Session.create(
+                customer=stripe_customer_id,
+                payment_method_types=['card'],
+                line_items=[{
+                    'price': settings.STRIPE_PRICE_ID,
+                    'quantity': 1,
+                }],
+                mode='subscription',
+                success_url=domain_url,
+            )
+            return redirect(checkout_session.url)
+        else:
+            return HttpResponse("Error")
     else:
-        handler404(request)
+        return HttpResponse("Error")
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class StripeWebhook(View):
+    def get(self, request, *args, **kwargs):
+        logging.info("<==========GET Method =========>")
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+        endpoint_secret = settings.STRIPE_ENDPOINT_SECRET
+        payload = request.body
+        sig_header = request.META['HTTP_STRIPE_SIGNATURE']
+        event = None
+        try:
+            event = stripe.Webhook.construct_event(
+                payload, sig_header, endpoint_secret
+            )
+        except ValueError as e:
+            # Invalid payload
+            return HttpResponse(status=400)
+        except stripe.error.SignatureVerificationError as e:
+            # Invalid signature
+            return HttpResponse(status=400)
+        if event['type'] == 'customer.subscription.created':
+            session = event['data']['object']
+            subscription_id = session['id']
+            if subscription_id:
+                logging.info(
+                    f'Subscription created for {request.user.username}'
+                )
+                customer_id = session['customer']
+                user = User.objects.get(stripe_customer_id=customer_id)
+                user.stripe_subscription_id = subscription_id
+                user.save()
+        if event['type'] == 'invoice.paid':
+            logging.info(
+                f'Checkout session completed for'
+                f' {request.user.username}'
+            )
+            session = event['data']['object']
+            payment_intent = session['payment_intent']
+            payment_intent_obj = stripe.PaymentIntent.retrieve(payment_intent)
+            transaction_id = payment_intent_obj['id']
+            payment_status = payment_intent_obj['status']
+            customer_id = payment_intent_obj['customer']
+            if customer_id is not None and payment_status == "succeeded":
+                user = User.objects.get(stripe_customer_id=customer_id)
+                payment_history = PaymentHistory()
+                payment_history.company = user.company
+                payment_history.status = payment_status
+                payment_history.transaction_id = transaction_id
+                payment_history.transaction_made_by = user
+                payment_history.save()
+        return HttpResponse(status=200)
+
+    def post(self, request, *args, **kwargs):
+        logging.info("<==========POST Method =========>")
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+        endpoint_secret = settings.STRIPE_ENDPOINT_SECRET
+        payload = request.body
+        sig_header = request.META['HTTP_STRIPE_SIGNATURE']
+        event = None
+        try:
+            event = stripe.Webhook.construct_event(
+                payload, sig_header, endpoint_secret
+            )
+        except ValueError as e:
+            # Invalid payload
+            return HttpResponse(status=400)
+        except stripe.error.SignatureVerificationError as e:
+            # Invalid signature
+            return HttpResponse(status=400)
+        if event['type'] == 'customer.subscription.created':
+            session = event['data']['object']
+            subscription_id = session['id']
+            if subscription_id:
+                logging.info(
+                    f'Subscription created for {request.user.username}'
+                )
+                customer_id = session['customer']
+                user = User.objects.get(stripe_customer_id=customer_id)
+                user.stripe_subscription_id = subscription_id
+                user.save()
+        if event['type'] == 'invoice.paid':
+            logging.info(
+                f'Checkout session completed for'
+                f' {request.user.username}'
+            )
+            session = event['data']['object']
+            payment_intent = session['payment_intent']
+            print(session)
+            subscription_id = session['subscription']
+            subscription = stripe.Subscription.retrieve(subscription_id)
+            end_date = subscription['current_period_end']
+            payment_intent_obj = stripe.PaymentIntent.retrieve(payment_intent)
+            transaction_id = payment_intent_obj['id']
+            payment_status = payment_intent_obj['status']
+            customer_id = payment_intent_obj['customer']
+            if customer_id is not None and payment_status == "succeeded":
+                user = User.objects.get(stripe_customer_id=customer_id)
+                end_date_readable = datetime.datetime.fromtimestamp(end_date)
+                company = Company.objects.get(user=user)
+                company.subscription_end_date = end_date_readable
+                company.save()
+                payment_history = PaymentHistory()
+                payment_history.company = user.company
+                payment_history.status = payment_status
+                payment_history.transaction_id = transaction_id
+                payment_history.transaction_made_by = user
+                payment_history.save()
+        return HttpResponse(status=200)

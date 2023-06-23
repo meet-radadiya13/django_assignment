@@ -1,7 +1,7 @@
 from django.contrib import admin
 from related_admin import RelatedFieldAdmin
 
-from authentication.models import User, Company
+from authentication.models import PaymentHistory, User, Company
 from project.models import Task, Attachment, AuditHistory, Project
 
 
@@ -96,4 +96,5 @@ admin.site.register(Project, ProjectAdmin)
 admin.site.register(Task, TaskAdmin)
 admin.site.register(Attachment, AttachmentAdmin)
 admin.site.register(AuditHistory, AuditHistoryAdmin)
-admin.site.register(Company)
+admin.site.register(Company,CommonModelAdmin)
+admin.site.register(PaymentHistory,CommonModelAdmin)

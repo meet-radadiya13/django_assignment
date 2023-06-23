@@ -23,6 +23,8 @@ class Company(CommonModel):
     address = models.TextField(null=True, blank=True)
     contact_number = PhoneField(null=True, blank=True)
     website = models.URLField(null=True, blank=True)
+    subscription_end_date = models.DateTimeField(null=True, blank=True)
+
 
     def __str__(self):
         return str(self.name)

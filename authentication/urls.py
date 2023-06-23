@@ -5,6 +5,7 @@ from django.urls import path
 from django.views.generic import TemplateView
 
 from authentication import views
+from authentication.views import StripeWebhook
 
 urlpatterns = [
     path(
@@ -57,5 +58,9 @@ urlpatterns = [
     path(
         "checkout/",
         views.add_subscription, name="checkout"
+        ),
+    path(
+        "webhook/",
+        StripeWebhook.as_view(), name="webhook"
         ),
 ]

@@ -1,0 +1,47 @@
+<html lang="en">
+{% load static %}
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Subscription</title>
+    <!-- Google Fonts Link -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap"
+          rel="stylesheet"/>
+    <link rel="stylesheet" href="{% static 'css/pricing.css' %}">
+</head>
+<body>
+<section>
+    <div class="container">
+        <div class="section-intro">
+            <h2>Purchase Subscription</h2>
+            <div class="section-style"></div>
+        </div>
+        <div class="pricing-table__wrapper">
+            <div class="pricing-cards">
+                <div class="row">
+                    <div class="card">
+                        <div class="card-pricing__header">
+                            <h4>Ultimate</h4>
+                            <p>Attend only first day</p>
+                            <h1 class="card-pricing__price"><span>$</span>30.00</h1>
+                        </div>
+                        <ul class="card-pricing__list">
+                            <li>Unlimited of Website</li>
+                            <li>Unlimited Disk Space</li>
+                            <li>Unlimited Bandwidth</li>
+                            <li>24/7/365 Support</li>
+                            <li>Unlimited Email Accounts</li>
+                            <li>99.9% Service Uptime</li>
+                        </ul>
+                        <div class="card-pricing__footer" id="submitBtn">
+                            <button class="button">Select Plan</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<script src="{% static 'js/pricing.js' %}"></script>
+</body>
+</html>
