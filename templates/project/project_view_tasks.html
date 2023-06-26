@@ -25,7 +25,7 @@
     <main class="main">
         <div class="table-responsive responsive-wrapper">
             <div class="main-header">
-                <a href="{% url 'add_tasks' %}" class="button">
+                <a href="{% url 'add_tasks' %}?project_id={{ project_id }}" class="button">
                     <i class="ph-plus-bold"></i>
                     <span>Add Tasks</span>
                 </a>

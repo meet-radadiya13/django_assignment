@@ -28,18 +28,13 @@
                         <option value="bug">Bug</option>
                     </select>
 
-                    <label for="related-project-name">Related project</label>
 
-                    <select id="related-project-name" name="related-project-name">
-                        {% for project in projects %}
-                            <option value="{{ project.id }}">{{ project.name }}</option>
-                        {% endfor %}
-                    </select>
+                    <input type="hidden" name="related-project-name" value="{{project_id}}">
 
 
                     <label for="assignee">Task Assignee</label>
                     <select id="assignee" name="assignee">
-                        {% for user in users %}
+                        {% for user in eligible_assignee_list %}
                             <option value="{{ user.id }}">{{ user.username }}</option>
                         {% endfor %}
                     </select>

@@ -8,20 +8,14 @@ Tasks
 {% block styles %}
 <link href="{% static 'css/task.css' %}" rel="stylesheet" type="text/css">
 
-<!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/css/bootstrap.css">-->
-<!--    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/dataTables.bootstrap4.min.css">-->
-<!--<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.2/css/all.min.css" rel="stylesheet">-->
+
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
-<!--<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">-->
+
 
 {% endblock styles %}
 
 {% block body %}
-<!-- <h1 class="bold">Tasks Summary.</h1>-->
-<!--<hr>-->
-<!--<br>-->
-<!--<br>-->
-<!--<br>-->
+
 
 <main class="main">
 
@@ -80,7 +74,6 @@ Tasks
     <thead>
     <tr>
         <th>Task Type</th>
-<!--        <th> Acronym</th>-->
         <th>Task Name</th>
         <th>Project</th>
         <th>Task Priority</th>
@@ -97,7 +90,7 @@ Tasks
         <td>
             <i class="fa fa-bug"></i>
         </td>
-<!--        <td> {{ task.task_acronym }}</td>-->
+
         <td>{{ task.task_acronym }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ task.name }}</td>
         <td> {{ task.project.name }}</td>
 
@@ -139,7 +132,7 @@ Tasks
         <td>
             <i class="fa fa-tasks"></i>
         </td>
-<!--        <td> {{ task.task_acronym }}</td>-->
+
         <td>{{ task.task_acronym }} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ task.name }}</td>
         <td> {{ task.project.name }}</td>
 
@@ -181,7 +174,7 @@ Tasks
     </tbody>
 </table>
 
-<!--</div>-->
+
 
 
 {% if messages %}
@@ -227,11 +220,7 @@ Tasks
 </nav>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
-<!--    <script src="https://code.jquery.com/jquery-3.3.1.js"></script>-->
-<!--    <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>-->
-<!--    <script src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js"></script>-->
-<!--    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>-->
-<!--    <script type="text/javascript" src="{% static 'js/task.js' %}"></script>-->
+
 <script type="text/javascript">
     $(document).ready(function () {
         $('#search-form').keyup(function (event) {

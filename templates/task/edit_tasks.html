@@ -9,17 +9,11 @@ Edit Tasks
 
 <link href="{% static 'css/edit_task.css' %}" rel="stylesheet" type="text/css">
 <link href="{% static 'css/jquery.fileuploader.min.css' %}" rel="stylesheet" type="text/css">
-<!--<link href="{% static 'css/font-fileuploader.css' %}" rel="stylesheet" type="text/css">-->
+
 
 <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/1.2.0/tailwind.min.css" rel="stylesheet" type="text/css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-<!--<link href="dist/font/font-fileuploader.css" rel="stylesheet">-->
-<!--<link href="dist/jquery.fileuploader.min.css" rel="stylesheet">-->
 
-<!--<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">-->
-<!--<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.2/css/all.min.css" rel="stylesheet">-->
-<!--<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>-->
-<!--<link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/1.2.0/tailwind.min.css" rel="stylesheet"/>-->
 {% endblock styles %}
 
 {% block body %}
@@ -34,7 +28,7 @@ Edit Tasks
 
 
 {% if tasks.created_by == request.user %}
-        <div class="change-password-modal">
+    <div class="change-password-modal">
 
             <ul class="breadcrumbs">
                 <li style="color:white;"><a href="http://127.0.0.1:8000/">Home</a></li>
@@ -50,7 +44,7 @@ Edit Tasks
 
             <h2 class="modal-header">{{tasks.name }}</h2>
 
-    <hr style="width:65%; margin-top:-3%">
+        <hr style="width:65%; margin-top:-3%">
             <section class="modal-body">
                 <form class="modal-form" id="form-1" method="POST" action="{% url 'update_tasks' %}" enctype="multipart/form-data">
                     {% csrf_token %}
@@ -63,10 +57,7 @@ Edit Tasks
                             <div class="box">
                                 <div class="input-bx">
                                     <h2 class="upload-area-title">Add attachments...</h2>
-<!--                                         <label for="upload" class="uploadlabel">-->
-<!--                                            <span> <i class="fa fa-cloud-upload"></i></span>-->
-<!--                                            <p> Click to Upload</p>-->
-<!--                                        </label>-->
+
 
                                     <input type="file" id="upload" name="upload" accept=".doc,.docx,.pdf,.jpg,.jpeg,.png" multiple>
 
@@ -101,8 +92,6 @@ Edit Tasks
                         </div>
                     </div>
 
-
-
                     <div class="modal-form-group">
                         <label for="description">Task Description: </label>
 
@@ -110,11 +99,7 @@ Edit Tasks
                                   cols="75">{{tasks.description}}</textarea>
                     </div>
 
-
-
-
-
-<!--                                Side Division -->
+                    <!--Side Division -->
 
                 <div class="password-guidelines" style="width:80%;">
                     <h3 class="guidelines-header">Details</h3>
@@ -227,10 +212,11 @@ Edit Tasks
                     </form>
         </div>
 
-                </div>
+  </div>
+
 {% else %}
 
-                <div class="change-password-modal">
+   <div class="change-password-modal">
 
             <ul class="breadcrumbs">
                 <li style="color:white;"><a href="http://127.0.0.1:8000/">Home</a></li>
@@ -245,7 +231,7 @@ Edit Tasks
 
 
             <h2 class="modal-header">{{ tasks.name }}</h2>
-        <hr style="width:65%; margin-top:-3%">
+            <hr style="width:65%; margin-top:-3%">
 
             <section class="modal-body">
                 <form class="modal-form"  id="form-1" method="POST" action="{% url 'update_tasks' %}" enctype="multipart/form-data">
@@ -259,10 +245,7 @@ Edit Tasks
                             <div class="box">
                                 <div class="input-bx">
                                     <h2 class="upload-area-title">Add attachments...</h2>
-<!--                                        <label for="upload" class="uploadlabel">-->
-<!--                                            <span> <i class="fa fa-cloud-upload"></i></span>-->
-<!--                                            <p> Click to Upload</p>-->
-<!--                                        </label>-->
+
 
                                          <input type="file" id="upload" name="upload" accept=".doc,.docx,.pdf,.jpg,.jpeg,.png" multiple>
 
@@ -302,8 +285,6 @@ Edit Tasks
                         </div>
                     </div>
 
-
-
                     <div class="modal-form-group">
                         <label for="description">Task Description: </label>
 
@@ -311,13 +292,7 @@ Edit Tasks
                                   cols="75">{{tasks.description}}</textarea>
                     </div>
 
-
-
-
-
-
-
-                <!--                Side Division -->
+                <!--Side Division -->
 
                 <div class="password-guidelines" style="width:80%;">
                     <h3 class="guidelines-header">Details</h3>
@@ -401,8 +376,6 @@ Edit Tasks
                                 {% endif %}
 
 
-
-
                             </select>
                         </div>
 
@@ -445,18 +418,16 @@ Edit Tasks
                 <button type="submit" class="modal-btn secondary-btn" id="submit_form">Save Changes</button>
                 <button type="button" class="modal-btn secondary-btn" id="submit_form" onclick="window.location.href='{% url 'view_tasks' 1 %}' ">Cancel</button>
 
-                    </div>
+                 </div>
 
 
 
-                    </form>
+             </form>
 
 
-                </div>
+         </div>
 
-                {% endif %}
-
-
+     {% endif %}
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
 <script src="{% static 'js/jquery.fileuploader.min.js' %}"></script>
@@ -465,8 +436,6 @@ Edit Tasks
     $('table').on('click', 'td[id="{{tasks.id }}"]', function(e) {
         $(this).closest('tr').remove()
 })
-
-
 
 </script>
 
@@ -477,9 +446,6 @@ Edit Tasks
 });
 </script>
 
-
-
-<!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>-->
 <script type="text/javascript" src="{% static 'js/edit_task.js' %}"></script>
 {% endblock body %}
 

@@ -234,8 +234,16 @@ def search_projects(request):
 
 
 # For Tasks.
+@require_GET
 @login_required()
 def view_tasks(request, page_no=1):
+    logging.info(
+        f'[Request Method: {request.method}, '
+        f'View Name: {__name__}, '
+        f'User ID: {request.user.id}, '
+        f'Data: {request.GET}, '
+        f'URI: {request.build_absolute_uri()}]'
+    )
 
     current_user = request.user
     my_tasks = Task.objects.filter((Q(assign=current_user) | Q(created_by=request.user)) & Q(is_deleted=False))
@@ -263,18 +271,35 @@ def view_tasks(request, page_no=1):
     context["current_page"] = page_obj.number
     return render(request, 'task/task.html', context)
 
-
+@require_GET
 @login_required
 def add_tasks(request):
-    users = User.objects.all().exclude(username="admin")
-    projects = Project.objects.all()
-    context = {'users': users, 'projects': projects}
+    logging.info(
+        f'[Request Method: {request.method}, '
+        f'View Name: {__name__}, '
+        f'User ID: {request.user.id}, '
+        f'Data: {request.GET}, '
+        f'URI: {request.build_absolute_uri()}]'
+    )
+    project_id = request.GET.get("project_id")
+    project_name = Project.objects.get(id=project_id)
+    project_assignees = project_name.assign
+    eligible_assignee_list = project_assignees.all()
+    users = User.objects.all().exclude(Q(is_superuser = True))
+    context = {'users': users, 'project_id': project_id,'eligible_assignee_list':eligible_assignee_list}
     return render(request, 'task/add_task.html', context)
 
 
 @login_required
 @require_POST
 def insert_tasks(request):
+    logging.info(
+        f'[Request Method: {request.method}, '
+        f'View Name: {__name__}, '
+        f'User ID: {request.user.id}, '
+        f'Data: {request.POST}, '
+        f'URI: {request.build_absolute_uri()}]'
+    )
     task_name = request.POST.get('task_name')
     task_assignee = request.POST.get('assignee')
     task_description = request.POST.get('task_desc')
@@ -302,12 +327,19 @@ def insert_tasks(request):
 
     return redirect("view_tasks", page_no=1)
 
-
+@require_GET
 @login_required
-def edit_tasks(request, task_id):
+def modify_tasks(request, task_id):
+    logging.info(
+        f'[Request Method: {request.method}, '
+        f'View Name: {__name__}, '
+        f'User ID: {request.user.id}, '
+        f'Data: {request.GET}, '
+        f'URI: {request.build_absolute_uri()}]'
+    )
     if Task.objects.filter(Q(id=task_id) | Q(assign=request.user)).exists():
         tasks = Task.objects.get(id=task_id)
-        users = User.objects.all().exclude(username="admin")
+        users = User.objects.all().exclude(Q(is_superuser = True))
         projects = Project.objects.all()
         attachment_related_task = Task.objects.get(id=task_id)
         related_attachments = Attachment.objects.filter(task=attachment_related_task, is_deleted=False).distinct('document_name')
@@ -322,6 +354,13 @@ def edit_tasks(request, task_id):
 @login_required
 @require_POST
 def update_tasks(request):
+    logging.info(
+        f'[Request Method: {request.method}, '
+        f'View Name: {__name__}, '
+        f'User ID: {request.user.id}, '
+        f'Data: {request.POST}, '
+        f'URI: {request.build_absolute_uri()}]'
+    )
     task_id = request.POST.get("task_id")
     task_type = request.POST.get("task-type")
     assignee = request.POST.get("assignee")
@@ -373,9 +412,16 @@ def update_tasks(request):
     task.save()
     return redirect("edit_tasks", task_id=task_id)
 
-
+@require_GET
 @login_required
 def search_tasks(request):
+    logging.info(
+        f'[Request Method: {request.method}, '
+        f'View Name: {__name__}, '
+        f'User ID: {request.user.id}, '
+        f'Data: {request.GET}, '
+        f'URI: {request.build_absolute_uri()}]'
+    )
     query = request.GET.get('query')
     page_no = request.GET.get('page_no')
     print(page_no)
@@ -412,9 +458,16 @@ def search_tasks(request):
     print(tasks)
     return JsonResponse(context, safe=False)
 
-
+@require_GET
 @login_required
 def filter_tasks(request):
+    logging.info(
+        f'[Request Method: {request.method}, '
+        f'View Name: {__name__}, '
+        f'User ID: {request.user.id}, '
+        f'Data: {request.GET}, '
+        f'URI: {request.build_absolute_uri()}]'
+    )
     query = request.GET.get('query')
     page_no = request.GET.get('page_no')
     print(page_no)
