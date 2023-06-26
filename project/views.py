@@ -10,7 +10,7 @@ from django.shortcuts import redirect, render
 from django.views.decorators.http import require_GET, require_POST
 
 from authentication.models import User
-from project.models import Project, Task
+from project.models import Project, Task, CommonModel, Attachment,AuditHistory
 
 
 # Create your views here.
@@ -230,6 +230,279 @@ def search_projects(request):
         context["previous_page_no"] = 1
     context["last_page"] = page_obj.paginator.num_pages
     context["current_page"] = page_obj.number
+    return JsonResponse(context, safe=False)
+
+
+# For Tasks.
+@require_GET
+@login_required()
+def view_tasks(request, page_no=1):
+    logging.info(
+        f'[Request Method: {request.method}, '
+        f'View Name: {__name__}, '
+        f'User ID: {request.user.id}, '
+        f'Data: {request.GET}, '
+        f'URI: {request.build_absolute_uri()}]'
+    )
+
+    current_user = request.user
+    my_tasks = Task.objects.filter((Q(assign=current_user) | Q(created_by=request.user)) & Q(is_deleted=False))
+    projects = Project.objects.all()
+
+    all_tasks = request.GET.get("task_filter")
+
+    context = {}
+    context["projects"] = projects
+
+    paginator = Paginator(my_tasks, 10)
+    page_obj = paginator.get_page(page_no)
+    context["page_obj"] = page_obj.object_list
+    context["has_next"] = page_obj.has_next()
+    if context["has_next"]:
+        context["next_page_no"] = page_obj.next_page_number()
+    else:
+        context["next_page_no"] = 1
+    context["has_previous"] = page_obj.has_previous()
+    if context["has_previous"]:
+        context["previous_page_no"] = page_obj.previous_page_number()
+    else:
+        context["previous_page_no"] = 1
+    context["last_page"] = page_obj.paginator.num_pages
+    context["current_page"] = page_obj.number
+    return render(request, 'task/task.html', context)
+
+@require_GET
+@login_required
+def add_tasks(request):
+    logging.info(
+        f'[Request Method: {request.method}, '
+        f'View Name: {__name__}, '
+        f'User ID: {request.user.id}, '
+        f'Data: {request.GET}, '
+        f'URI: {request.build_absolute_uri()}]'
+    )
+    project_id = request.GET.get("project_id")
+    project_name = Project.objects.get(id=project_id)
+    project_assignees = project_name.assign
+    eligible_assignee_list = project_assignees.all()
+    users = User.objects.all().exclude(Q(is_superuser = True))
+    context = {'users': users, 'project_id': project_id,'eligible_assignee_list':eligible_assignee_list}
+    return render(request, 'task/add_task.html', context)
+
+
+@login_required
+@require_POST
+def insert_tasks(request):
+    logging.info(
+        f'[Request Method: {request.method}, '
+        f'View Name: {__name__}, '
+        f'User ID: {request.user.id}, '
+        f'Data: {request.POST}, '
+        f'URI: {request.build_absolute_uri()}]'
+    )
+    task_name = request.POST.get('task_name')
+    task_assignee = request.POST.get('assignee')
+    task_description = request.POST.get('task_desc')
+    task_related_project = request.POST.get('related-project-name')
+    task_type = request.POST.get('task-type')
+    task_status = request.POST.get('task-status')
+    task_priority = request.POST.get('task-priority')
+    project_acronym = Project.objects.get(pk=task_related_project)
+    task_acronym_partial = project_acronym.acronym
+    task_count = Task.objects.filter(project=task_related_project).exclude(is_deleted=True).count() + 1
+    task_acronym_partial += "-" + str(task_count)
+    task = Task()
+
+    task.project = Project.objects.get(pk=task_related_project)
+    task.assign = User.objects.get(pk=task_assignee)
+    task.task_acronym = task_acronym_partial
+    task.name = task_name
+    task.description = task_description
+    task.created_by = request.user
+    task.updated_by = request.user
+    task.task_priority = task_priority
+    task.task_status = task_status
+    task.task_type = task_type
+    task.save()
+
+    return redirect("view_tasks", page_no=1)
+
+@require_GET
+@login_required
+def modify_tasks(request, task_id):
+    logging.info(
+        f'[Request Method: {request.method}, '
+        f'View Name: {__name__}, '
+        f'User ID: {request.user.id}, '
+        f'Data: {request.GET}, '
+        f'URI: {request.build_absolute_uri()}]'
+    )
+    if Task.objects.filter(Q(id=task_id) | Q(assign=request.user)).exists():
+        tasks = Task.objects.get(id=task_id)
+        users = User.objects.all().exclude(Q(is_superuser = True))
+        projects = Project.objects.all()
+        attachment_related_task = Task.objects.get(id=task_id)
+        related_attachments = Attachment.objects.filter(task=attachment_related_task, is_deleted=False).distinct('document_name')
+        activities = AuditHistory.objects.filter(project=tasks.project ,task = tasks).order_by('updated_at')
+
+        context = {"tasks": tasks, "users": users, "projects": projects, "related_attachments": related_attachments, 'activities':activities}
+        return render(request, "task/edit_tasks.html", context)
+    else:
+        return redirect("view_tasks", page_no=1)
+
+
+@login_required
+@require_POST
+def update_tasks(request):
+    logging.info(
+        f'[Request Method: {request.method}, '
+        f'View Name: {__name__}, '
+        f'User ID: {request.user.id}, '
+        f'Data: {request.POST}, '
+        f'URI: {request.build_absolute_uri()}]'
+    )
+    task_id = request.POST.get("task_id")
+    task_type = request.POST.get("task-type")
+    assignee = request.POST.get("assignee")
+    assignee_updated= request.POST.get("assignee-updated")
+    user_object = User.objects.filter(Q(id=assignee) | Q(id=assignee_updated))[0]
+    task_status = request.POST.get("task-status")
+    task_priority = request.POST.get("task-priority")
+    task_description = request.POST.get('description')
+    task_attachments = list(set(request.FILES.getlist('upload[]')))
+    attachment_related_task = Task.objects.get(id=task_id)
+    old_documents = list(map(int, request.POST.getlist('old_documents')))
+    saved_documents = list(Attachment.objects.filter(Q(task=task_id)&Q(is_deleted=False)).values_list('id',flat=True))
+
+    for i in saved_documents:
+        if i not in old_documents:
+
+            delete = Attachment.objects.get(id=i)
+            delete.is_deleted = True
+            delete.save()
+            audit_history = AuditHistory(
+                task = attachment_related_task,
+                project = attachment_related_task.project,
+                action_by = request.user,
+                action=f"Attachment " 
+                       f"{delete.document_name} was deleted",
+            )
+            audit_history.save()
+
+
+
+    for task_attachment in task_attachments:
+        attachments = Attachment()
+        attachments.document_name = task_attachment.name
+        attachments.document = task_attachment
+        attachments.task = attachment_related_task
+        attachments.created_by = request.user
+        attachments.updated_by = request.user
+        attachments.save()
+
+    print(task_attachments)
+    task = Task.objects.filter(id=task_id).first()
+
+    task.task_status = task_status
+    task.task_priority = task_priority
+    task.task_type = task_type
+    task.description = task_description
+    task.assign = user_object
+    task.updated_by = request.user
+    task.save()
+    return redirect("edit_tasks", task_id=task_id)
+
+@require_GET
+@login_required
+def search_tasks(request):
+    logging.info(
+        f'[Request Method: {request.method}, '
+        f'View Name: {__name__}, '
+        f'User ID: {request.user.id}, '
+        f'Data: {request.GET}, '
+        f'URI: {request.build_absolute_uri()}]'
+    )
+    query = request.GET.get('query')
+    page_no = request.GET.get('page_no')
+    print(page_no)
+    if page_no == 'undefined':
+        page_no = 1
+    context = {}
+    current_user = request.user
+    tasks = Task.objects. \
+        filter(Q(assign=current_user) & Q(is_deleted=False)).values('pk', 'name', 'task_acronym',
+                                                                    'task_type',
+                                                                    'project__name',
+                                                                    'task_priority',
+                                                                    'task_status',
+                                                                    )
+    if query is not None:
+        tasks = tasks.filter(Q(name__icontains=query))
+
+    paginator = Paginator(tasks, 10)
+    page_obj = paginator.get_page(page_no)
+    context["page_obj"] = list(page_obj.object_list)
+    context["has_next"] = page_obj.has_next()
+    if context["has_next"]:
+        context["next_page_no"] = page_obj.next_page_number()
+    else:
+        context["next_page_no"] = 1
+    context["has_previous"] = page_obj.has_previous()
+    if context["has_previous"]:
+        context["previous_page_no"] = page_obj.previous_page_number()
+    else:
+        context["previous_page_no"] = 1
+    context["last_page"] = page_obj.paginator.num_pages
+    context["current_page"] = page_obj.number
+    print(context)
+    print(tasks)
+    return JsonResponse(context, safe=False)
+
+@require_GET
+@login_required
+def filter_tasks(request):
+    logging.info(
+        f'[Request Method: {request.method}, '
+        f'View Name: {__name__}, '
+        f'User ID: {request.user.id}, '
+        f'Data: {request.GET}, '
+        f'URI: {request.build_absolute_uri()}]'
+    )
+    query = request.GET.get('query')
+    page_no = request.GET.get('page_no')
+    print(page_no)
+    if page_no == 'undefined':
+        page_no = 1
+    context = {}
+    current_user = request.user
+    tasks = Task.objects. \
+        filter(Q(assign=current_user) | Q(created_by=current_user)).exclude(is_deleted=True).values('pk', 'name',
+                                                                                                    'task_acronym',
+                                                                                                    'task_type',
+                                                                                                    'project__name',
+                                                                                                    'task_priority',
+                                                                                                    'task_status',
+                                                                                                    )
+    if query is not None:
+        tasks = tasks.filter(Q(project__name=query))
+
+    paginator = Paginator(tasks, 10)
+    page_obj = paginator.get_page(page_no)
+    context["page_obj"] = list(page_obj.object_list)
+    context["has_next"] = page_obj.has_next()
+    if context["has_next"]:
+        context["next_page_no"] = page_obj.next_page_number()
+    else:
+        context["next_page_no"] = 1
+    context["has_previous"] = page_obj.has_previous()
+    if context["has_previous"]:
+        context["previous_page_no"] = page_obj.previous_page_number()
+    else:
+        context["previous_page_no"] = 1
+    context["last_page"] = page_obj.paginator.num_pages
+    context["current_page"] = page_obj.number
+    print(context)
+    print(tasks)
     return JsonResponse(context, safe=False)
 
 

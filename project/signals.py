@@ -54,3 +54,4 @@ def task_edit_history(sender, instance, *args, **kwargs):
                        f"{previous.task_status} to {current.task_status}",
             )
             audit_history.save()
+

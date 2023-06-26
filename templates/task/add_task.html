@@ -1,0 +1,76 @@
+{% extends 'root/base.html' %}
+{% load static %}
+
+{% block title %}
+    Add Tasks
+{% endblock title %}
+
+{% block styles %}
+    <link href="{% static 'css/add_project.css' %}" rel="stylesheet" type="text/css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+{% endblock styles %}
+
+{% block body %}
+    <div class="row">
+        <div class="col-md-12">
+            <form action="{% url 'insert_tasks' %}" method="post">
+                {% csrf_token %}
+                <fieldset>
+                    <legend>Your Task Info</legend>
+
+                    <label for="projectname">Task Name:</label>
+                    <input type="text" id="projectname" name="task_name" placeholder="For ex. MyDemoProject">
+
+
+                    <label for="task-type">Task Type:</label>
+                    <select name="task-type" id="task-type">
+                        <option value="task">Task</option>
+                        <option value="bug">Bug</option>
+                    </select>
+
+
+                    <input type="hidden" name="related-project-name" value="{{project_id}}">
+
+
+                    <label for="assignee">Task Assignee</label>
+                    <select id="assignee" name="assignee">
+                        {% for user in eligible_assignee_list %}
+                            <option value="{{ user.id }}">{{ user.username }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <label for="task-status">Task Status:</label>
+                    <select name="task-status" id="task-status">
+                        <option value="todo">To-Do</option>
+                        <option value="in_progress">In-progress</option>
+                        <option value="completed">Completed</option>
+
+                    </select>
+
+                    <label for="task-priority">Task Priority:</label>
+                    <select name="task-priority" id="task-priority">
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="hi">High</option>
+
+
+                    </select>
+
+
+
+                    <label for="description">Task Description:</label>
+                    <textarea id="description" name="task_desc"></textarea>
+
+
+
+                </fieldset>
+
+                <button type="submit">Add Task</button>
+
+            </form>
+        </div>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+    <script type="text/javascript" src="{% static 'js/add_project.js' %}"></script>
+{% endblock body %}
