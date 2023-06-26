@@ -25,13 +25,13 @@ class Company(CommonModel):
     website = models.URLField(null=True, blank=True)
     subscription_end_date = models.DateTimeField(null=True, blank=True)
 
-
     def __str__(self):
         return str(self.name)
 
 
 class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(
+
         _("Username"), default="user", max_length=20, unique=True
     )
     firstname = models.CharField(max_length=20, null=True, blank=True)
@@ -78,7 +78,7 @@ class PaymentHistory(CommonModel):
     transaction_made_by = models.ForeignKey(
         User, on_delete=models.SET_NULL,
         null=True, blank=True
-        )
+    )
 
     def __str__(self):
         return str(self.company)

@@ -9,7 +9,8 @@ class UserChangedPasswordMiddleware:
 
     def __call__(self, request):
         if request.user.is_authenticated and \
-                not request.user.has_changed_password and not request.user.is_superuser:
+                not request.user.has_changed_password and \
+                not request.user.is_superuser:
             if not request.path.startswith(reverse('create_password')):
                 return render(request, 'user/change_password.html', {})
         response = self.get_response(request)
