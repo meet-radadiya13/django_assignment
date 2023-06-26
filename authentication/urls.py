@@ -5,6 +5,7 @@ from django.urls import path
 from django.views.generic import TemplateView
 
 from authentication import views
+from authentication.views import StripeWebhook
 
 urlpatterns = [
     path(
@@ -21,9 +22,11 @@ urlpatterns = [
     path("validate_user/", views.validate_user, name="validate_user"),
     path(
         "profile/",
-        login_required(TemplateView.as_view(
-            template_name="user/profile.html"
-        )),
+        login_required(
+            TemplateView.as_view(
+                template_name="user/profile.html"
+            )
+        ),
         name="profile",
     ),
     path("edit_user/", views.edit_user, name="edit_user"),
@@ -44,8 +47,20 @@ urlpatterns = [
         views.search_company_users,
         name="search_users"
     ),
-    path("delete_users/<int:user_id>",
-         views.delete_user, name="delete_user"),
-    path("create_password/",
-         views.create_password, name="create_password"),
+    path(
+        "delete_users/<int:user_id>",
+        views.delete_user, name="delete_user"
+        ),
+    path(
+        "create_password/",
+        views.create_password, name="create_password"
+        ),
+    path(
+        "checkout/",
+        views.add_subscription, name="checkout"
+        ),
+    path(
+        "webhook/",
+        StripeWebhook.as_view(), name="webhook"
+        ),
 ]

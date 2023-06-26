@@ -2,19 +2,26 @@ import datetime
 import logging
 from multiprocessing import Process
 
+import stripe
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Q, Count, Case, When
-from django.http import JsonResponse
-from django.shortcuts import render, redirect
-from django.views.decorators.http import require_POST, require_GET
+from django.db.models import Case, Count, Q, When
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import redirect, render
+from django.utils.decorators import method_decorator
+from django.views import View
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET, require_POST
 
-from authentication.models import User
-from authentication.utils import send_registration_mail
+from authentication.models import Company, PaymentHistory, User
+from authentication.utils import check_subscription, send_registration_mail
+from django_assignment import settings
 from project.models import Project, Task
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 # Create your views here.
@@ -38,7 +45,8 @@ def render_home(request):
         f'View Name: {__name__}, '
         f'User ID: {request.user.id}, '
         f'Data: {request.GET}, '
-        f'URI: {request.build_absolute_uri()}]')
+        f'URI: {request.build_absolute_uri()}]'
+    )
     total_projects = Project.objects.filter(
         Q(is_deleted=False) &
         Q(created_by__company=request.user.company)
@@ -53,9 +61,12 @@ def render_home(request):
     )
     latest_projects = Project.objects.filter(
         Q(is_deleted=False) &
-        Q(created_by__company=request.user.company)).annotate(
-        num_tasks=Count('task')).order_by(
-        '-num_tasks', '-created_at').annotate(
+        Q(created_by__company=request.user.company)
+    ).annotate(
+        num_tasks=Count('task')
+    ).order_by(
+        '-num_tasks', '-created_at'
+    ).annotate(
         task_high=Count(Case(When(task__task_priority='hi', then=1))),
         task_medium=Count(
             Case(When(task__task_priority='medium', then=1))
@@ -88,13 +99,16 @@ def render_home(request):
             Q(assign=request.user)
         ).distinct().count()
         context['total_users'] = total_users.filter(
-            Q(project__created_by=request.user)).count()
+            Q(project__created_by=request.user)
+        ).count()
         context['latest_projects'] = latest_projects.filter(
             Q(created_by=request.user) |
-            Q(assign=request.user)).distinct()[:5]
+            Q(assign=request.user)
+        ).distinct()[:5]
         context['latest_tasks'] = latest_tasks.filter(
             Q(created_by=request.user) |
-            Q(assign=request.user)).distinct()[:5]
+            Q(assign=request.user)
+        ).distinct()[:5]
         context['latest_users'] = latest_users[:5]
     return render(request, 'root/home.html', context)
 
@@ -106,7 +120,8 @@ def save_user(request):
         f'View Name: {__name__}, '
         f'User ID: {request.user.id}, '
         f'Data: {request.POST}, '
-        f'URI: {request.build_absolute_uri()}]')
+        f'URI: {request.build_absolute_uri()}]'
+    )
     form_user = request.POST
     name = form_user.get("name")
     email = form_user.get("email")
@@ -133,7 +148,8 @@ def validate_user(request):
         f'View Name: {__name__}, '
         f'User ID: {request.user.id}, '
         f'Data: {request.POST}, '
-        f'URI: {request.build_absolute_uri()}]')
+        f'URI: {request.build_absolute_uri()}]'
+    )
     if request.user.is_authenticated:
         return redirect("home")
     current_user = request.POST
@@ -142,6 +158,11 @@ def validate_user(request):
     user = authenticate(email=email, password=password)
     if user is not None:
         login(request, user)
+        if check_subscription(request):
+            messages.error(
+                request, "Your subscription Expires in less then "
+                         "3 days"
+            )
         return redirect("home")
     else:
         messages.error(request, "Invalid username or password")
@@ -156,7 +177,8 @@ def edit_user(request):
         f'View Name: {__name__}, '
         f'User ID: {request.user.id}, '
         f'Data: {request.POST}, '
-        f'URI: {request.build_absolute_uri()}]')
+        f'URI: {request.build_absolute_uri()}]'
+    )
     form_user = request.POST
     user_id = form_user.get("user_id")
     username = form_user.get("username")
@@ -190,7 +212,8 @@ def edit_password(request):
         f'View Name: {__name__}, '
         f'User ID: {request.user.id}, '
         f'Data: {request.POST}, '
-        f'URI: {request.build_absolute_uri()}]')
+        f'URI: {request.build_absolute_uri()}]'
+    )
     form_user = request.POST
     user_id = form_user.get("user_id_reset")
     current_password = form_user.get("current_password")
@@ -218,16 +241,21 @@ def view_company_users(request, page_no):
         f'View Name: {__name__}, '
         f'User ID: {request.user.id}, '
         f'Data: {request.GET}, '
-        f'URI: {request.build_absolute_uri()}]')
+        f'URI: {request.build_absolute_uri()}]'
+    )
     if request.user.is_owner:
         context = {}
         current_user = request.user
         company_users = User.objects.filter(
             Q(company=current_user.company) &
-            Q(is_owner=False)).exclude(Q(is_superuser=True) |
-                                       Q(is_active=False) |
-                                       Q(company=None)).order_by(
-            'username', 'date_joined')
+            Q(is_owner=False)
+        ).exclude(
+            Q(is_superuser=True) |
+            Q(is_active=False) |
+            Q(company=None)
+        ).order_by(
+            'username', 'date_joined'
+        )
         projects = Project.objects.filter(
             Q(is_deleted=False) &
             Q(created_by__company=current_user.company)
@@ -265,7 +293,8 @@ def add_company_users(request):
         f'View Name: {__name__}, '
         f'User ID: {request.user.id}, '
         f'Data: {request.POST}, '
-        f'URI: {request.build_absolute_uri()}]')
+        f'URI: {request.build_absolute_uri()}]'
+    )
     if request.user.is_owner:
         response = redirect('view_users', page_no=1)
         email = request.POST.get('email')
@@ -321,7 +350,8 @@ def search_company_users(request):
         f'View Name: {__name__}, '
         f'User ID: {request.user.id}, '
         f'Data: {request.GET}, '
-        f'URI: {request.build_absolute_uri()}]')
+        f'URI: {request.build_absolute_uri()}]'
+    )
     context = {}
     if request.user.is_owner:
         query = request.GET.get('query')
@@ -332,16 +362,22 @@ def search_company_users(request):
         company_users = User.objects.filter(
             Q(company=current_user.company) &
             Q(is_owner=False) &
-            Q(is_active=True)).exclude(is_superuser=True).\
+            Q(is_active=True)
+        ).exclude(is_superuser=True). \
             order_by('username', 'date_joined')
         if query is not None:
             company_users = company_users.filter(
-                Q(firstname__icontains=query) | Q(lastname__icontains=query))
+                Q(firstname__icontains=query) | Q(lastname__icontains=query)
+            )
         company_users = list(
             company_users.extra(
-                select={'raw_phone': 'authentication_user.contact_no'}).
-            values('pk', 'firstname', 'lastname', 'email',
-                   'raw_phone', 'date_joined'))
+                select={'raw_phone': 'authentication_user.contact_no'}
+            ).
+            values(
+                'pk', 'firstname', 'lastname', 'email',
+                'raw_phone', 'date_joined'
+            )
+        )
         paginator = Paginator(company_users, 10)
         page_obj = paginator.get_page(page_no)
         context["page_obj"] = list(page_obj.object_list)
@@ -368,7 +404,8 @@ def delete_user(request, user_id):
         f'View Name: {__name__}, '
         f'User ID: {request.user.id}, '
         f'Data: {request.GET}, '
-        f'URI: {request.build_absolute_uri()}]')
+        f'URI: {request.build_absolute_uri()}]'
+    )
     if request.user.is_owner:
         user = User.objects.get(id=user_id)
         projects = Project.objects.filter(
@@ -393,7 +430,8 @@ def create_password(request):
         f'View Name: {__name__}, '
         f'User ID: {request.user.id}, '
         f'Data: {request.POST}, '
-        f'URI: {request.build_absolute_uri()}]')
+        f'URI: {request.build_absolute_uri()}]'
+    )
     form_user = request.POST
     user_id = form_user.get("user_id_reset")
     new_password = form_user.get("new_password")
@@ -404,3 +442,143 @@ def create_password(request):
     login(request, current_user)
     messages.success(request, "Passwords changed successfully.")
     return redirect("home")
+
+
+@require_GET
+@login_required
+def add_subscription(request):
+    logging.info(
+        f'[Request Method: {request.method}, '
+        f'View Name: {__name__}, '
+        f'User ID: {request.user.id}, '
+        f'Data: {request.GET}, '
+        f'URI: {request.build_absolute_uri()}]'
+    )
+    if request.user.is_owner:
+        stripe_customer_id = request.user.stripe_customer_id
+        if stripe_customer_id is not None:
+            domain_url = request.build_absolute_uri('/')
+            checkout_session = stripe.checkout.Session.create(
+                customer=stripe_customer_id,
+                payment_method_types=['card'],
+                line_items=[{
+                    'price': settings.STRIPE_PRICE_ID,
+                    'quantity': 1,
+                }],
+                mode='subscription',
+                success_url=domain_url,
+            )
+            return redirect(checkout_session.url)
+        else:
+            return HttpResponse("Error")
+    else:
+        return HttpResponse("Error")
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class StripeWebhook(View):
+    def get(self, request, *args, **kwargs):
+        logging.info("<==========GET Method =========>")
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+        endpoint_secret = settings.STRIPE_ENDPOINT_SECRET
+        payload = request.body
+        sig_header = request.META['HTTP_STRIPE_SIGNATURE']
+        event = None
+        try:
+            event = stripe.Webhook.construct_event(
+                payload, sig_header, endpoint_secret
+            )
+        except ValueError as e:
+            # Invalid payload
+            return HttpResponse(status=400)
+        except stripe.error.SignatureVerificationError as e:
+            # Invalid signature
+            return HttpResponse(status=400)
+        if event['type'] == 'customer.subscription.created':
+            session = event['data']['object']
+            subscription_id = session['id']
+            if subscription_id:
+                logging.info(
+                    f'Subscription created for {request.user.username}'
+                )
+                customer_id = session['customer']
+                user = User.objects.get(stripe_customer_id=customer_id)
+                user.stripe_subscription_id = subscription_id
+                user.save()
+        if event['type'] == 'invoice.paid':
+            logging.info(
+                f'Checkout session completed for'
+                f' {request.user.username}'
+            )
+            session = event['data']['object']
+            payment_intent = session['payment_intent']
+            payment_intent_obj = stripe.PaymentIntent.retrieve(payment_intent)
+            transaction_id = payment_intent_obj['id']
+            payment_status = payment_intent_obj['status']
+            customer_id = payment_intent_obj['customer']
+            if customer_id is not None and payment_status == "succeeded":
+                user = User.objects.get(stripe_customer_id=customer_id)
+                payment_history = PaymentHistory()
+                payment_history.company = user.company
+                payment_history.status = payment_status
+                payment_history.transaction_id = transaction_id
+                payment_history.transaction_made_by = user
+                payment_history.save()
+        return HttpResponse(status=200)
+
+    def post(self, request, *args, **kwargs):
+        logging.info("<==========POST Method =========>")
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+        endpoint_secret = settings.STRIPE_ENDPOINT_SECRET
+        payload = request.body
+        sig_header = request.META['HTTP_STRIPE_SIGNATURE']
+        event = None
+        try:
+            event = stripe.Webhook.construct_event(
+                payload, sig_header, endpoint_secret
+            )
+        except ValueError as e:
+            # Invalid payload
+            return HttpResponse(status=400)
+        except stripe.error.SignatureVerificationError as e:
+            # Invalid signature
+            return HttpResponse(status=400)
+        if event['type'] == 'customer.subscription.created':
+            session = event['data']['object']
+            subscription_id = session['id']
+            if subscription_id:
+                logging.info(
+                    f'Subscription created for {request.user.username}'
+                )
+                customer_id = session['customer']
+                user = User.objects.get(stripe_customer_id=customer_id)
+                user.stripe_subscription_id = subscription_id
+                user.save()
+        if event['type'] == 'invoice.paid':
+            logging.info(
+                f'Checkout session completed for'
+                f' {request.user.username}'
+            )
+            session = event['data']['object']
+            payment_intent = session['payment_intent']
+            print(session)
+            subscription_id = session['subscription']
+            subscription = stripe.Subscription.retrieve(subscription_id)
+            end_date = subscription['current_period_end']
+            payment_intent_obj = stripe.PaymentIntent.retrieve(payment_intent)
+            transaction_id = payment_intent_obj['id']
+            payment_status = payment_intent_obj['status']
+            customer_id = payment_intent_obj['customer']
+            if customer_id is not None and payment_status == "succeeded":
+                user = User.objects.get(stripe_customer_id=customer_id)
+                end_date_readable = datetime.datetime.fromtimestamp(end_date)
+                company = Company.objects.get(user=user)
+                company.subscription_end_date = end_date_readable
+                company.save()
+                payment_history = PaymentHistory()
+                payment_history.company = user.company
+                payment_history.status = payment_status
+                payment_history.transaction_id = transaction_id
+                payment_history.transaction_made_by = user
+                payment_history.save()
+        return HttpResponse(status=200)

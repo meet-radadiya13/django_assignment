@@ -1,3 +1,6 @@
+from datetime import datetime, timedelta
+
+import stripe
 from django.core import mail
 
 from django_assignment import settings
@@ -18,3 +21,14 @@ def send_registration_mail(email, password, company, firstname, uri, ):
         connection=connection,
     )
     email.send()
+
+
+def check_subscription(request):
+    subscription = stripe.Subscription.retrieve(
+        request.user.stripe_subscription_id
+    )
+    if subscription.status == 'active':
+        current_period_end_date = datetime.fromtimestamp(
+            subscription.current_period_end
+        )
+        return current_period_end_date - datetime.now() <= timedelta(days=3)
